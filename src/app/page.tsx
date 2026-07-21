@@ -14,7 +14,7 @@ export default async function HomePage() {
     <div className="min-h-screen">
       <header className="border-b border-line bg-panel">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-          <Link href="/" className="text-xl font-extrabold tracking-tight text-white">
+          <Link href="/" className="text-xl font-extrabold tracking-tight text-ink">
             {nomeLoja}
           </Link>
 

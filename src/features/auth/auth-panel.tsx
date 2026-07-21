@@ -32,10 +32,10 @@ export function AuthPanel({
             className="mb-3 h-16 w-16 rounded-full border border-line object-cover"
           />
         )}
-        <span className="text-[32px] font-extrabold leading-none tracking-tight text-white">
+        <span className="text-[32px] font-extrabold leading-none tracking-tight text-ink">
           {nomeLoja}
         </span>
-        <span className="mt-1.5 text-[11px] font-semibold uppercase tracking-wider text-brand-light">
+        <span className="mt-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
           Loja Online
         </span>
       </div>
@@ -48,7 +48,7 @@ export function AuthPanel({
       </p>
 
       {aviso && (
-        <div className="mt-6 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
+        <div className="mt-6 rounded-lg border border-amber-600/20 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           {aviso}
         </div>
       )}

@@ -10,28 +10,33 @@ const config: Config = {
     extend: {
       colors: {
         // Tokens semânticos: trocar a paleta aqui reveste o sistema inteiro,
-        // sem tocar em componente. Base: fundo quase preto + acento único.
-        bg: "#0a0a12",
-        panel: "#0f0f1c",
-        surface: "#141428",
-        surface2: "#1a1a30",
-        line: "#1e1e38",
-        line2: "#252545",
-        ink: "#f0f4ff",
-        muted: "#6b7280",
-        muted2: "#4b5563",
+        // sem tocar em componente. Base clara e quase acromática — em loja de
+        // roupa quem dá a cor é a foto do produto, não a interface.
+        bg: "#ffffff",
+        panel: "#ffffff",
+        surface: "#f7f7f7",
+        surface2: "#efefef",
+        line: "#e5e5e5",
+        line2: "#d4d4d4",
+        ink: "#0a0a0a",
+        // Contrastes sobre #fff: muted 8.1:1, muted2 4.7:1 — ambos passam AA
+        // em texto pequeno, que é onde eles são usados (labels, placeholders).
+        muted: "#525252",
+        muted2: "#737373",
         brand: {
-          DEFAULT: "#3b82f6",
-          light: "#60a5fa",
-          dark: "#1d4ed8",
+          DEFAULT: "#171717",
+          light: "#404040",
+          dark: "#000000",
         },
       },
       boxShadow: {
-        brand: "0 1px 6px rgba(59, 130, 246, 0.06)",
-        "brand-lg": "0 2px 10px rgba(59, 130, 246, 0.1)",
+        brand: "0 1px 2px rgba(0, 0, 0, 0.05)",
+        "brand-lg": "0 4px 12px rgba(0, 0, 0, 0.08)",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        // Condensada para títulos de seção, marca e nome de produto.
+        display: ["var(--font-display)", "Arial Narrow", "sans-serif"],
       },
     },
   },

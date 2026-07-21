@@ -11,7 +11,7 @@ Primeiro cliente: loja de roupas. O modelo de variações e a vitrine foram dese
 ## Stack
 
 - **Next.js 14** (App Router) + **TypeScript** (strict): frontend + API (Route Handlers)
-- **TailwindCSS**: tema escuro, mobile-first
+- **TailwindCSS**: tema claro e quase acromático, mobile-first. Barlow Condensed (títulos) + DM Sans (corpo)
 - **Drizzle ORM** + **Supabase** (Postgres, Auth, Storage)
 - **TanStack Table**: listagens com paginação server-side, busca e filtros por URL
 - **Mercado Pago Checkout Pro**: Pix, crédito e débito
@@ -84,6 +84,22 @@ aguardando_pagamento ─┬─> pago ─> separando ─> pronto_para_retirada �
 **Catálogo**
 - [ ] **Fase 2**: Cadastro de produtos — categorias, produto, eixos de opção com tipo, geração de variações, galeria múltipla, tabela de medidas
 - [ ] **Fase 3**: Vitrine pública — home, listagem com filtro por categoria/cor/tamanho/preço, página do produto com swatch trocando a galeria e tamanho esgotado visível
+
+### Notas de vitrine (Fase 3)
+
+Referência de layout: lojas streetwear BR (Monte Leste, Sometimes). O que herdar e o que corrigir.
+
+**Herdar.** Imagem 3:4 com troca frente/verso no hover. Nome em duas linhas de altura fixa, para o card não dançar. Preço Pix em destaque, parcelamento em cinza abaixo. Badge de categoria com posição configurável no card. Tarja de avisos no topo (frete grátis, parcelamento) em marquee pausável no hover.
+
+**Corrigir — são os erros que essas lojas cometem:**
+
+O nome do produto vem concatenado com a variação ("Calça Baggy Oversized - ML Preto"), e a mesma peça em seis cores ocupa seis lugares na vitrine. A listagem deve agrupar por produto e mostrar as cores como swatches dentro de um card só.
+
+Três badges disputam o mesmo card ("Lançamento" + "-14%" + "2 POR 269"). Limite: no máximo dois, com prioridade desconto > coleção.
+
+A nota exibida no card é da loja, não do produto, o que infla todos para 4.9. Se entrar avaliação, é por produto — ou não entra.
+
+**Consequência de schema:** o badge de "-14%" exige `preco_comparativo` em `produtos_variacoes` (o "de R$ X por R$ Y"), e o agrupamento por cor exige que a query de listagem já traga as variações agregadas. Ambos precisam nascer na Fase 2.
 
 **Venda**
 - [ ] **Fase 4**: Carrinho e checkout de retirada, com reserva de estoque

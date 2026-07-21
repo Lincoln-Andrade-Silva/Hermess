@@ -22,7 +22,7 @@ export function LogoutButton({ fullWidth = true }: { fullWidth?: boolean }) {
       onClick={sair}
       disabled={saindo}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-transparent px-3 py-2 text-xs font-medium text-muted transition hover:border-red-400 hover:text-red-400 disabled:opacity-60",
+        "inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-transparent px-3 py-2 text-xs font-medium text-muted transition hover:border-red-600 hover:text-red-600 disabled:opacity-60",
         fullWidth && "w-full",
       )}
     >

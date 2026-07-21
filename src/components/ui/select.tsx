@@ -115,7 +115,7 @@ export function Select({ value, onChange, options, className, withAvatar }: Sele
                   }}
                   className={cn(
                     "flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-sm transition",
-                    active ? "bg-brand/10 font-medium text-brand-light" : "text-ink hover:bg-surface",
+                    active ? "bg-surface2 font-medium text-ink" : "text-ink hover:bg-surface",
                   )}
                 >
                   <span className="flex min-w-0 items-center gap-2">

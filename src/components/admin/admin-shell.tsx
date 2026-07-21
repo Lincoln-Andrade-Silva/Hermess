@@ -20,7 +20,7 @@ function Brand({ nomeLoja, logoUrl }: { nomeLoja: string; logoUrl: string | null
         />
       )}
       <div className="min-w-0">
-        <p className="truncate text-lg font-extrabold tracking-tight text-white">{nomeLoja}</p>
+        <p className="truncate text-lg font-extrabold tracking-tight text-ink">{nomeLoja}</p>
         <p className="text-xs text-muted">Painel Admin</p>
       </div>
     </div>
@@ -66,7 +66,7 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
                 className={cn(
                   "flex items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-[13px] transition",
                   active
-                    ? "bg-brand/[0.12] font-semibold text-brand-light"
+                    ? "bg-surface2 font-semibold text-ink"
                     : "font-medium text-muted hover:bg-surface hover:text-ink",
                 )}
               >
@@ -90,7 +90,7 @@ function UserFooter({ nome }: { nome: string }) {
         </div>
         <div className="min-w-0 flex-1 leading-tight">
           <p className="truncate text-sm font-medium">{nome}</p>
-          <p className="text-xs font-medium text-brand-light">Administrador</p>
+          <p className="text-xs font-medium text-muted">Administrador</p>
         </div>
       </div>
       <div className="mt-3 space-y-2">
@@ -135,7 +135,7 @@ export function AdminShell({
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Abrir menu"
-          className="rounded-lg p-2 text-white transition hover:bg-surface"
+          className="rounded-lg p-2 text-ink transition hover:bg-surface"
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -148,14 +148,14 @@ export function AdminShell({
               className="h-7 w-7 rounded-full border border-line object-cover"
             />
           )}
-          <span className="text-sm font-semibold text-white">{nomeLoja}</span>
+          <span className="text-sm font-semibold text-ink">{nomeLoja}</span>
         </div>
       </header>
 
       {/* Drawer (mobile) */}
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} aria-hidden />
+          <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} aria-hidden />
           <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-panel shadow-2xl">
             <div className="flex items-center justify-between border-b border-line pr-2">
               <Brand nomeLoja={nomeLoja} logoUrl={logoUrl} />

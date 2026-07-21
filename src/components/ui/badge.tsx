@@ -3,11 +3,11 @@ import { cn } from "@/lib/cn";
 type Tone = "success" | "muted" | "brand" | "warning" | "danger";
 
 const toneClasses: Record<Tone, string> = {
-  success: "border-emerald-500/20 bg-emerald-500/10 text-emerald-400",
-  muted: "border-line bg-surface text-muted2",
-  brand: "border-brand/20 bg-brand/10 text-brand-light",
-  warning: "border-amber-500/20 bg-amber-500/10 text-amber-400",
-  danger: "border-red-500/20 bg-red-500/10 text-red-400",
+  success: "border-emerald-600/20 bg-emerald-50 text-emerald-700",
+  muted: "border-line bg-surface text-muted",
+  brand: "border-line2 bg-surface2 text-ink",
+  warning: "border-amber-600/20 bg-amber-50 text-amber-700",
+  danger: "border-red-600/20 bg-red-50 text-red-700",
 };
 
 export function Badge({ tone = "brand", children }: { tone?: Tone; children: React.ReactNode }) {
