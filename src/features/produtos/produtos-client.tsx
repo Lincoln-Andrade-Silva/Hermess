@@ -4,10 +4,10 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Pencil, Plus, Trash2 } from "lucide-react";
-import { Badge, ConfirmModal, DataTableServer, UrlSelect } from "@/components/ui";
+import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
+import { Badge, ConfirmModal, DataTableServer, FormError, UrlSelect } from "@/components/ui";
 import { formatBRL } from "@/lib/format";
-import { excluirProduto, type ProdutoDaLista } from "./actions";
+import { clonarProduto, excluirProduto, type ProdutoDaLista } from "./actions";
 
 export function ProdutosClient({
   itens,
@@ -23,6 +23,7 @@ export function ProdutosClient({
   const router = useRouter();
   const [processando, iniciar] = useTransition();
   const [excluindo, setExcluindo] = useState<ProdutoDaLista | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
 
   function confirmarExclusao() {
     if (!excluindo) return;
@@ -30,6 +31,19 @@ export function ProdutosClient({
       await excluirProduto(excluindo.id);
       setExcluindo(null);
       router.refresh();
+    });
+  }
+
+  function clonar(produto: ProdutoDaLista) {
+    setErro(null);
+    iniciar(async () => {
+      const resultado = await clonarProduto(produto.id);
+      if (!resultado.ok) {
+        setErro(resultado.erro ?? "Não foi possível clonar.");
+        return;
+      }
+      // Vai direto para a cópia: clonar é sempre o primeiro passo de editar.
+      router.push(`/admin/produtos/${resultado.id}`);
     });
   }
 
@@ -107,6 +121,15 @@ export function ProdutosClient({
           </Link>
           <button
             type="button"
+            onClick={() => clonar(row.original)}
+            disabled={processando}
+            aria-label={`Clonar ${row.original.nome}`}
+            className="rounded-lg p-2 text-muted transition hover:bg-surface hover:text-ink disabled:opacity-50"
+          >
+            <Copy className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
             onClick={() => setExcluindo(row.original)}
             aria-label={`Excluir ${row.original.nome}`}
             className="rounded-lg p-2 text-muted transition hover:bg-surface hover:text-red-600"
@@ -120,6 +143,12 @@ export function ProdutosClient({
 
   return (
     <>
+      {erro && (
+        <div className="mb-4">
+          <FormError>{erro}</FormError>
+        </div>
+      )}
+
       <DataTableServer
         columns={colunas}
         data={itens}
@@ -178,6 +207,15 @@ export function ProdutosClient({
                   <Pencil className="h-3.5 w-3.5" />
                   Editar
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => clonar(produto)}
+                  disabled={processando}
+                  aria-label={`Clonar ${produto.nome}`}
+                  className="rounded-lg border border-line px-3 py-2 text-muted transition hover:text-ink disabled:opacity-50"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </button>
                 <button
                   type="button"
                   onClick={() => setExcluindo(produto)}

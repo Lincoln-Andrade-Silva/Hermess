@@ -345,17 +345,114 @@ export async function salvarProduto(
 export async function excluirProduto(id: string): Promise<ResultadoAcao> {
   await requireAdmin();
 
-  // Imagens saem do bucket antes das linhas, senão as URLs se perdem e o
-  // arquivo fica órfão consumindo cota para sempre.
+  // As URLs precisam ser lidas antes do delete, senão o arquivo fica órfão no
+  // bucket consumindo cota para sempre.
   const imagens = await db
     .select({ url: produtosImagens.url })
     .from(produtosImagens)
     .where(eq(produtosImagens.produtoId, id));
-  await Promise.all(imagens.map((i) => removerImagem(i.url)));
 
   await db.delete(produtos).where(eq(produtos.id, id));
+
+  // Só depois de apagar as linhas dá para saber quais arquivos ficaram sem
+  // dono: um clone compartilha as URLs do original, e remover o arquivo aqui
+  // deixaria o outro produto sem imagem.
+  if (imagens.length > 0) {
+    const urls = imagens.map((i) => i.url);
+    const aindaEmUso = await db
+      .select({ url: produtosImagens.url })
+      .from(produtosImagens)
+      .where(inArray(produtosImagens.url, urls));
+    const usadas = new Set(aindaEmUso.map((i) => i.url));
+
+    await Promise.all(urls.filter((url) => !usadas.has(url)).map((url) => removerImagem(url)));
+  }
+
   revalidatePath("/admin/produtos");
   return { ok: true };
+}
+
+/**
+ * Duplica o produto com todas as imagens, tipos de variação e a grade.
+ *
+ * A cópia nasce inativa: quase sempre o motivo de clonar é criar uma variação
+ * do modelo, e publicar na vitrine um duplicado exato do original seria pior
+ * que não clonar. As imagens são reaproveitadas por URL — não há cópia no
+ * bucket, então excluir a cópia não pode remover arquivo (ver excluirProduto).
+ */
+export async function clonarProduto(id: string): Promise<ResultadoAcao & { id?: string }> {
+  await requireAdmin();
+
+  const original = await buscarProduto(id);
+  if (!original) return { ok: false, erro: "Produto não encontrado." };
+
+  const nome = `${original.nome} (clone)`;
+  const slugsUsados = await db.select({ slug: produtos.slug }).from(produtos);
+  const slug = slugUnico(
+    nome,
+    slugsUsados.map((s) => s.slug),
+  );
+
+  try {
+    const novoId = await db.transaction(async (tx) => {
+      const [criado] = await tx
+        .insert(produtos)
+        .values({
+          nome,
+          slug,
+          descricao: original.descricao,
+          categoriaId: original.categoriaId,
+          fichaTecnica: original.fichaTecnica,
+          ativo: false,
+        })
+        .returning({ id: produtos.id });
+
+      if (original.imagens.length > 0) {
+        await tx.insert(produtosImagens).values(
+          original.imagens.map((imagem) => ({
+            produtoId: criado.id,
+            url: imagem.url,
+            ordem: imagem.ordem,
+          })),
+        );
+      }
+
+      if (original.opcoes.length > 0) {
+        await tx.insert(produtosOpcoes).values(
+          original.opcoes.map((opcao) => ({
+            produtoId: criado.id,
+            nome: opcao.nome,
+            tipo: opcao.tipo,
+            ordem: opcao.ordem,
+            valores: opcao.valores,
+          })),
+        );
+      }
+
+      if (original.variacoes.length > 0) {
+        await tx.insert(produtosVariacoes).values(
+          original.variacoes.map((variacao) => ({
+            produtoId: criado.id,
+            sku: variacao.sku,
+            preco: variacao.preco,
+            // Estoque não se duplica: a cópia é outro produto e começa zerada.
+            estoque: 0,
+            imagemUrl: variacao.imagemUrl,
+            combinacao: variacao.combinacao,
+            ativo: variacao.ativo,
+          })),
+        );
+      }
+
+      return criado.id;
+    });
+
+    revalidatePath("/admin/produtos");
+    return { ok: true, id: novoId };
+  } catch (e) {
+    console.error("Clonar produto:", e);
+    return { ok: false, erro: "Não foi possível clonar o produto." };
+  }
 }
 
 export async function alternarAtivo(id: string, ativo: boolean): Promise<ResultadoAcao> {

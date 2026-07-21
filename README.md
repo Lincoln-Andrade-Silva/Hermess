@@ -62,6 +62,10 @@ produtos_variacoes   id, produto_id, sku, preco, estoque, reservado,
 
 **Entrega** — só retirada no local. Sem frete, sem endereço de entrega, sem integração de logística. Envio fica pra depois do MVP.
 
+**Deploy** — `vercel.json` fixa `framework: nextjs` e a região `gru1` (São Paulo). O preset é declarado no repositório porque a detecção automática falha quando o projeto é criado manualmente na Vercel, e o erro que aparece (`No Output Directory named "public"`) não sugere a causa. A região importa: o Postgres fica em São Paulo, e função em Washington paga a latência do Atlântico em toda query.
+
+No deploy, `DATABASE_URL` precisa apontar para o **Transaction Pooler** (porta 6543), não para a conexão direta usada em dev — cada função serverless abre a própria conexão e o pool do free tier esgota rápido.
+
 **Auth** — cadastro obrigatório pra comprar (Supabase Auth via `@supabase/ssr`, papéis em `profiles.tipo`). Registro cria o usuário já confirmado via `service_role`, sem depender de SMTP.
 
 Como a vitrine é pública, o middleware inverte a lógica do Chronoss: em vez de listar as rotas abertas, lista as **fechadas** (`/admin`, `/checkout`, `/meus-pedidos`, `/minha-conta`). Tudo que não casa com esses prefixos é acessível sem sessão.
