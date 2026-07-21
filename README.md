@@ -1,10 +1,12 @@
 # Hermess
 
-Sistema genérico de venda de produtos: catálogo com variações, checkout, pagamentos (Pix, cartão de crédito e débito via Mercado Pago), painel administrativo com dashboard e relatórios.
+Sistema genérico de venda de produtos: catálogo com variações, vitrine pública, checkout com pagamento online (Pix, crédito e débito via Mercado Pago), controle de estoque e painel administrativo com dashboard e relatórios.
 
 O nome vem de Hermes, deus grego do comércio e das trocas.
 
 Construído como **template reutilizável**, modelo **1 loja por deploy**: cada cliente é um novo projeto Vercel + novo Supabase rodando o mesmo código. A identidade da loja (nome, logo, contatos) é configurável dentro do sistema, sem tocar em código.
+
+Primeiro cliente: loja de roupas. O modelo de variações e a vitrine foram desenhados em cima desse caso (Cor × Tamanho, swatch de cor, tabela de medidas), mas nada no schema é específico de moda.
 
 ## Stack
 
@@ -12,9 +14,68 @@ Construído como **template reutilizável**, modelo **1 loja por deploy**: cada 
 - **TailwindCSS**: tema escuro, mobile-first
 - **Drizzle ORM** + **Supabase** (Postgres, Auth, Storage)
 - **TanStack Table**: listagens com paginação server-side, busca e filtros por URL
-- **Mercado Pago**: Pix, crédito e débito
+- **Mercado Pago Checkout Pro**: Pix, crédito e débito
 - **Deploy**: Vercel + Supabase
 
-## Status
+## Decisões de arquitetura
 
-Em definição de escopo. O roadmap por fases entra aqui assim que fechado.
+**Tenancy** — uma loja por deploy. Sem `tenant_id`, sem RLS por tenant. Reuso direto do modelo do Chronoss.
+
+**Variações** — eixos declarados (Cor, Tamanho) e variações geradas a partir deles, com a combinação guardada em `jsonb`. Escolhido sobre a normalização completa por cortar de 5 tabelas pra 3 e simplificar muito o admin. O custo aceito: o valor da combinação não tem integridade referencial e filtrar por cor na vitrine usa operador JSON em vez de join indexado — tolerável num catálogo de loja única.
+
+Cada eixo tem um `tipo` (`texto` | `cor`), que é o que permite renderizar cor como swatch e trocar a galeria do produto quando o cliente seleciona.
+
+```
+produtos             id, categoria_id, nome, descricao, preco_base, ativo
+produtos_imagens     id, produto_id, url, ordem
+produtos_opcoes      id, produto_id, nome, tipo, ordem, valores jsonb
+produtos_variacoes   id, produto_id, sku, preco, estoque, reservado,
+                     imagem_url, ativo, combinacao jsonb
+```
+
+**Estoque** — reserva no checkout com expiração. Criar o pedido incrementa `reservado` na variação; o pagamento aprovado converte reserva em baixa de `estoque`; pedido não pago expira em 30 min (cron na Vercel) e devolve a reserva. Disponível para venda = `estoque - reservado`. Escolhido porque Pix e Checkout Pro são assíncronos: baixar só na aprovação deixa dois clientes pagarem a mesma última peça.
+
+**Pagamento** — Checkout Pro, idêntico ao Chronoss. Credenciais no banco (configuráveis no admin), não no `.env`. Webhook valida HMAC do `x-signature` e **nunca confia no payload**: consulta o pagamento no MP e reflete no domínio. `external_reference` no formato `clienteId:pedidoId`.
+
+**Entrega** — só retirada no local. Sem frete, sem endereço de entrega, sem integração de logística. Envio fica pra depois do MVP.
+
+**Auth** — cadastro obrigatório pra comprar (Supabase Auth, papéis `admin` / `cliente`), como no Chronoss.
+
+**Máquina de estados do pedido**
+
+```
+aguardando_pagamento ─┬─> pago ─> separando ─> pronto_para_retirada ─> retirado
+                      ├─> expirado          (reserva devolvida pelo cron)
+                      └─> cancelado
+                    pago ─> estornado       (estorno no MP, reserva/estoque devolvidos)
+```
+
+## Roadmap (fases)
+
+**Base**
+- [ ] **Fase 0**: Setup — Next.js, Tailwind, Drizzle, Supabase conectado, design system portado do Chronoss (`components/ui`, `DataTable` server-side, filtros por URL, admin shell)
+- [ ] **Fase 1**: Auth — registro/login, `profiles` com tipo/status, proteção de rotas, seed admin
+
+**Catálogo**
+- [ ] **Fase 2**: Cadastro de produtos — categorias, produto, eixos de opção com tipo, geração de variações, galeria múltipla, tabela de medidas
+- [ ] **Fase 3**: Vitrine pública — home, listagem com filtro por categoria/cor/tamanho/preço, página do produto com swatch trocando a galeria e tamanho esgotado visível
+
+**Venda**
+- [ ] **Fase 4**: Carrinho e checkout de retirada, com reserva de estoque
+- [ ] **Fase 5**: Pagamento — Checkout Pro, webhook, reconciliação, estorno, cron de expiração
+- [ ] **Fase 6**: Pedidos no admin — listagem, detalhe e máquina de estados
+- [ ] **Fase 7**: PDV — venda de balcão lançada pelo admin
+
+**Gestão**
+- [ ] **Fase 8**: Estoque — entrada, movimentações e alerta de estoque baixo
+- [ ] **Fase 9**: Dashboard — KPIs, gráficos e ranking de produtos, com filtro por período
+- [ ] **Fase 10**: Relatórios — faturamento, produtos, métodos de pagamento e estoque
+- [ ] **Fase 11**: Configurações — identidade da loja, credenciais do Mercado Pago, janela de retirada, usuários
+
+**Entrega**
+- [ ] **Fase 12**: Deploy (Vercel + Supabase + domínio)
+- [ ] **Fase 13**: Checklist de reuso do template
+
+### Fora do MVP
+
+Frete e envio, cupons de desconto, avaliações de produto, lista de desejos, "avise-me quando chegar", multi-loja.
