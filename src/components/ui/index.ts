@@ -7,6 +7,7 @@ export { PageHeader } from "./page-header";
 export { Badge } from "./badge";
 export { Segmented } from "./segmented";
 export { Select, type SelectOption } from "./select";
+export { ColorPicker } from "./color-picker";
 export { Toggle } from "./toggle";
 export { Modal } from "./modal";
 export { ConfirmModal } from "./confirm-modal";

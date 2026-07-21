@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Input } from "./input";
+import { cn } from "@/lib/cn";
 import { montarUrl } from "@/lib/pagination";
 
 interface DataTableServerProps<T> {
@@ -16,6 +17,12 @@ interface DataTableServerProps<T> {
   filter?: React.ReactNode;
   actions?: React.ReactNode;
   emptyMessage?: string;
+  /**
+   * Substitui a tabela por cartões abaixo de `sm`. Tabela no celular obriga a
+   * rolar na horizontal, que é péssimo com o polegar — quando a listagem tem
+   * mais de duas colunas, vale sempre fornecer.
+   */
+  mobileCard?: (item: T) => React.ReactNode;
 }
 
 /** Listagem paginada no servidor: busca e página vivem na URL (`q`, `page`). */
@@ -28,6 +35,7 @@ export function DataTableServer<T>({
   filter,
   actions,
   emptyMessage = "Nenhum registro encontrado.",
+  mobileCard,
 }: DataTableServerProps<T>) {
   const router = useRouter();
   const pathname = usePathname();
@@ -60,7 +68,7 @@ export function DataTableServer<T>({
   return (
     <div className="space-y-6 sm:space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 sm:flex-1">
+        <div className="flex flex-col gap-2 sm:flex-1 sm:flex-row sm:items-center">
           <div className="relative flex-1 sm:max-w-xs">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted2" />
             <Input
@@ -75,7 +83,24 @@ export function DataTableServer<T>({
         {actions && <div className="sm:shrink-0">{actions}</div>}
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-line">
+      {mobileCard && (
+        <div className="space-y-3 sm:hidden">
+          {rows.length === 0 ? (
+            <p className="rounded-2xl border border-line px-4 py-10 text-center text-sm text-muted">
+              {emptyMessage}
+            </p>
+          ) : (
+            rows.map((row) => <div key={row.id}>{mobileCard(row.original)}</div>)
+          )}
+        </div>
+      )}
+
+      <div
+        className={cn(
+          "overflow-x-auto rounded-2xl border border-line",
+          mobileCard && "hidden sm:block",
+        )}
+      >
         <table className="w-full text-sm">
           <thead className="border-b border-line bg-surface/40">
             {table.getHeaderGroups().map((group) => (

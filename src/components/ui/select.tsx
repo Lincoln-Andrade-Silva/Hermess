@@ -79,7 +79,7 @@ export function Select({ value, onChange, options, className, withAvatar }: Sele
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex h-11 w-full items-center justify-between gap-2 rounded-lg border border-line bg-surface px-4 text-sm font-medium text-ink transition hover:border-line2 hover:bg-surface2"
+        className="flex h-[50px] w-full items-center justify-between gap-2 rounded-lg border border-line bg-surface px-4 text-[15px] font-medium text-ink transition hover:border-line2 hover:bg-surface2"
       >
         <span className="flex min-w-0 items-center gap-2">
           {withAvatar && selected && selected.avatarUrl !== undefined && (
