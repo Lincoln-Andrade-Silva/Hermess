@@ -17,6 +17,24 @@ Primeiro cliente: loja de roupas. O modelo de variações e a vitrine foram dese
 - **Mercado Pago Checkout Pro**: Pix, crédito e débito
 - **Deploy**: Vercel + Supabase
 
+## Setup
+
+```bash
+npm install
+cp .env.example .env    # preencha as credenciais do Supabase
+npm run db:check        # testa a conexão com o Postgres
+npm run dev             # http://localhost:3000
+```
+
+| Comando | Ação |
+|---|---|
+| `npm run dev` | Servidor de desenvolvimento |
+| `npm run build` | Build de produção |
+| `npm run db:check` | Testa conexão com o Postgres |
+| `npm run db:generate` | Gera migrations a partir do schema Drizzle |
+| `npm run db:migrate` | Aplica migrations |
+| `npm run db:studio` | Drizzle Studio |
+
 ## Decisões de arquitetura
 
 **Tenancy** — uma loja por deploy. Sem `tenant_id`, sem RLS por tenant. Reuso direto do modelo do Chronoss.
@@ -53,7 +71,7 @@ aguardando_pagamento ─┬─> pago ─> separando ─> pronto_para_retirada �
 ## Roadmap (fases)
 
 **Base**
-- [ ] **Fase 0**: Setup — Next.js, Tailwind, Drizzle, Supabase conectado, design system portado do Chronoss (`components/ui`, `DataTable` server-side, filtros por URL, admin shell)
+- [x] **Fase 0**: Setup — Next.js, Tailwind, Drizzle, design system portado do Chronoss (`components/ui`, `DataTable` server-side, filtros por URL)
 - [ ] **Fase 1**: Auth — registro/login, `profiles` com tipo/status, proteção de rotas, seed admin
 
 **Catálogo**
