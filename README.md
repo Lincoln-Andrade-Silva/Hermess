@@ -23,8 +23,12 @@ Primeiro cliente: loja de roupas. O modelo de variações e a vitrine foram dese
 npm install
 cp .env.example .env    # preencha as credenciais do Supabase
 npm run db:check        # testa a conexão com o Postgres
+npm run db:migrate      # cria as tabelas, RLS e triggers
+npm run seed:admin      # cria o admin padrão (admin@hermess.com / 123456)
 npm run dev             # http://localhost:3000
 ```
+
+> Primeiro passo ao reimplantar para um novo cliente: rodar o seed e **trocar a senha do admin**.
 
 | Comando | Ação |
 |---|---|
@@ -34,6 +38,7 @@ npm run dev             # http://localhost:3000
 | `npm run db:generate` | Gera migrations a partir do schema Drizzle |
 | `npm run db:migrate` | Aplica migrations |
 | `npm run db:studio` | Drizzle Studio |
+| `npm run seed:admin` | Cria o admin padrão |
 
 ## Decisões de arquitetura
 
@@ -57,7 +62,9 @@ produtos_variacoes   id, produto_id, sku, preco, estoque, reservado,
 
 **Entrega** — só retirada no local. Sem frete, sem endereço de entrega, sem integração de logística. Envio fica pra depois do MVP.
 
-**Auth** — cadastro obrigatório pra comprar (Supabase Auth, papéis `admin` / `cliente`), como no Chronoss.
+**Auth** — cadastro obrigatório pra comprar (Supabase Auth via `@supabase/ssr`, papéis em `profiles.tipo`). Registro cria o usuário já confirmado via `service_role`, sem depender de SMTP.
+
+Como a vitrine é pública, o middleware inverte a lógica do Chronoss: em vez de listar as rotas abertas, lista as **fechadas** (`/admin`, `/checkout`, `/meus-pedidos`, `/minha-conta`). Tudo que não casa com esses prefixos é acessível sem sessão.
 
 **Máquina de estados do pedido**
 
@@ -72,7 +79,7 @@ aguardando_pagamento ─┬─> pago ─> separando ─> pronto_para_retirada �
 
 **Base**
 - [x] **Fase 0**: Setup — Next.js, Tailwind, Drizzle, design system portado do Chronoss (`components/ui`, `DataTable` server-side, filtros por URL)
-- [ ] **Fase 1**: Auth — registro/login, `profiles` com tipo/status, proteção de rotas, seed admin
+- [x] **Fase 1**: Auth — registro/login, `profiles` com tipo/status, proteção de rotas, seed admin, shell do painel
 
 **Catálogo**
 - [ ] **Fase 2**: Cadastro de produtos — categorias, produto, eixos de opção com tipo, geração de variações, galeria múltipla, tabela de medidas
