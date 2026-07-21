@@ -15,6 +15,34 @@
       "when": 1784654702601,
       "tag": "0001_auth_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784659497934,
+      "tag": "0002_create_catalogo",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784659515339,
+      "tag": "0003_catalogo_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1784660784277,
+      "tag": "0004_ficha_tecnica_generica",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1784661900000,
+      "tag": "0005_ajustes_catalogo",
+      "breakpoints": true
     }
   ]
 }

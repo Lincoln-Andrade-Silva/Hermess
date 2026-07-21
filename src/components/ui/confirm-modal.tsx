@@ -25,7 +25,7 @@ export function ConfirmModal({
   return (
     <Modal open={open} onClose={onClose} title={title} className="max-w-md">
       <div className="text-sm text-muted">{message}</div>
-      <div className="mt-6 flex justify-end gap-2">
+      <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onClose} disabled={loading}>
           Cancelar
         </Button>
