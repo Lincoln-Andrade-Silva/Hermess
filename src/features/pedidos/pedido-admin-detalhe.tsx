@@ -141,7 +141,7 @@ function ItemLinha({ item }: { item: PedidoAdminDetalhe["itens"][number] }) {
       <div className="relative h-16 w-14 shrink-0 overflow-hidden rounded-lg border border-line bg-surface">
         {item.imagem ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.imagem} alt="" className="h-full w-full object-cover" />
+          <img src={item.imagem} alt="" className="h-full w-full object-cover object-top" />
         ) : (
           <span className="flex h-full items-center justify-center text-muted2">
             <ImageOff className="h-4 w-4" />

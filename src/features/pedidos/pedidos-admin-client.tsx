@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
-import { AlertTriangle, Trash2 } from "lucide-react";
+import { AlertTriangle, Eye, Trash2 } from "lucide-react";
 import { Badge, ConfirmModal, DataTableServer, UrlSelect } from "@/components/ui";
 import { formatBRL, formatData } from "@/lib/format";
 import { excluirPedido } from "./admin-actions";
@@ -127,7 +127,14 @@ const columns: ColumnDef<PedidoLinha>[] = [
     id: "acoes",
     header: "",
     cell: ({ row }) => (
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-1">
+        <Link
+          href={`/admin/pedidos/${row.original.numero}`}
+          aria-label={`Ver pedido ${row.original.numero}`}
+          className="rounded-lg p-2 text-muted transition hover:bg-surface hover:text-ink"
+        >
+          <Eye className="h-4 w-4" />
+        </Link>
         <ExcluirPedido pedido={row.original} />
       </div>
     ),
@@ -143,7 +150,6 @@ export function PedidosAdminClient({ lista }: { lista: ListagemPedidos }) {
       pageCount={lista.pageCount}
       searchPlaceholder="Buscar por nº, nome ou telefone"
       filter={<UrlSelect param="status" options={STATUS_OPTIONS} className="sm:w-52" />}
-      rowHref={(pedido) => `/admin/pedidos/${pedido.numero}`}
       emptyMessage="Nenhum pedido encontrado."
       mobileCard={(pedido) => (
         <div className="flex items-center gap-2 rounded-2xl border border-line p-4">

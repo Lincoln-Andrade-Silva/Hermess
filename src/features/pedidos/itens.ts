@@ -1,6 +1,12 @@
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { pedidoItens, produtosImagens, produtosVariacoes, type Combinacao } from "@/db/schema";
+import {
+  pedidoItens,
+  produtos,
+  produtosImagens,
+  produtosVariacoes,
+  type Combinacao,
+} from "@/db/schema";
 
 export interface ItemComImagem {
   nomeProduto: string;
@@ -9,6 +15,8 @@ export interface ItemComImagem {
   precoUnitario: string;
   quantidade: number;
   imagem: string | null;
+  /** Slug do produto quando ainda existe e está ativo — para linkar à vitrine. */
+  slug: string | null;
 }
 
 /**
@@ -31,6 +39,11 @@ export async function selecionarItensComImagem(pedidoId: string): Promise<ItemCo
              select vv2.produto_id from ${produtosVariacoes} vv2 where vv2.id = ${pedidoItens.variacaoId}
            )
            order by pi.ordem asc limit 1)
+      )`,
+      slug: sql<string | null>`(
+        select p.slug from ${produtos} p
+        join ${produtosVariacoes} vs on vs.produto_id = p.id
+        where vs.id = ${pedidoItens.variacaoId} and p.ativo
       )`,
     })
     .from(pedidoItens)
