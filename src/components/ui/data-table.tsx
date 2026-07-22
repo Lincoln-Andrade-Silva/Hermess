@@ -59,7 +59,7 @@ export function DataTable<T>({
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
               placeholder={searchPlaceholder}
-              className="h-11 pl-10"
+              className="h-[50px] pl-10"
             />
           </div>
           {filter}

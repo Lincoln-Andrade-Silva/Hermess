@@ -190,6 +190,10 @@ export const statusPedido = pgEnum("status_pedido", [
   "pago",
   "cancelado",
   "expirado",
+  // Fluxo de retirada no balcão (transições manuais do admin).
+  "separando",
+  "pronto_para_retirada",
+  "retirado",
 ]);
 
 /**

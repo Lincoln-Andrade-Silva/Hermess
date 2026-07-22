@@ -99,6 +99,13 @@
       "when": 1784723004200,
       "tag": "0013_pagamento_config_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1784739729619,
+      "tag": "0014_pedido_status_retirada",
+      "breakpoints": true
     }
   ]
 }

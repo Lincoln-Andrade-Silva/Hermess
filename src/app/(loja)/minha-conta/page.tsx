@@ -4,7 +4,6 @@ import { ChevronRight, Package } from "lucide-react";
 import { getCurrentProfile } from "@/lib/auth";
 import { formatBRL, formatData } from "@/lib/format";
 import { Badge } from "@/components/ui";
-import { LogoutButton } from "@/features/auth/logout-button";
 import { listarMeusPedidos } from "@/features/pedidos/actions";
 import { STATUS_LABEL, STATUS_TONE } from "@/features/pedidos/status";
 
@@ -18,16 +17,11 @@ export default async function MinhaContaPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-extrabold uppercase tracking-wide text-ink sm:text-4xl">
-            Minha conta
-          </h1>
-          <p className="mt-1 text-sm text-muted">{profile.nome}</p>
-        </div>
-        <div className="w-full sm:w-auto">
-          <LogoutButton />
-        </div>
+      <div>
+        <h1 className="font-display text-3xl font-extrabold uppercase tracking-wide text-ink sm:text-4xl">
+          Minha conta
+        </h1>
+        <p className="mt-1 text-sm text-muted">{profile.nome}</p>
       </div>
 
       <h2 className="mb-4 mt-10 font-display text-xl font-extrabold uppercase tracking-wide text-ink">

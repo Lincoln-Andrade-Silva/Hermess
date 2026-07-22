@@ -1,0 +1,164 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { AlertTriangle, ArrowRight, ChevronLeft, ImageOff } from "lucide-react";
+import { Badge, Button, ConfirmModal, FormError } from "@/components/ui";
+import { formatBRL, formatDataHora } from "@/lib/format";
+import { avancarStatus, cancelarPedido, type PedidoAdminDetalhe } from "./admin-actions";
+import { AVANCAR_LABEL, CANCELAVEIS, PROXIMO_STATUS, STATUS_LABEL, STATUS_TONE } from "./status";
+
+export function PedidoAdminDetalheView({ pedido }: { pedido: PedidoAdminDetalhe }) {
+  const router = useRouter();
+  const [processando, iniciar] = useTransition();
+  const [erro, setErro] = useState<string | null>(null);
+  const [confirmarCancelar, setConfirmarCancelar] = useState(false);
+
+  const proximo = PROXIMO_STATUS[pedido.status];
+  const podeCancelar = CANCELAVEIS.includes(pedido.status);
+  const estornaAoCancelar = pedido.gatewayPagamentoId && pedido.status !== "aguardando_pagamento";
+
+  function avancar() {
+    setErro(null);
+    iniciar(async () => {
+      const r = await avancarStatus(pedido.numero);
+      if (!r.ok) setErro(r.erro ?? "Não foi possível avançar.");
+      else router.refresh();
+    });
+  }
+
+  function cancelar() {
+    setErro(null);
+    iniciar(async () => {
+      const r = await cancelarPedido(pedido.numero);
+      setConfirmarCancelar(false);
+      if (!r.ok) setErro(r.erro ?? "Não foi possível cancelar.");
+      else router.refresh();
+    });
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl">
+      <Link
+        href="/admin/pedidos"
+        className="mb-4 inline-flex items-center gap-1 text-sm text-muted transition hover:text-ink"
+      >
+        <ChevronLeft className="h-4 w-4" />
+        Pedidos
+      </Link>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="font-display text-3xl font-extrabold uppercase tracking-wide text-ink">
+          Pedido #{pedido.numero}
+        </h1>
+        <Badge tone={STATUS_TONE[pedido.status]}>{STATUS_LABEL[pedido.status]}</Badge>
+      </div>
+      <p className="mt-1 text-sm text-muted">Feito em {formatDataHora(pedido.criadoEm)}</p>
+
+      {pedido.pendenciaEstoque && (
+        <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-600/20 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            O pagamento foi aprovado depois do pedido expirar, então o estoque não baixou
+            automaticamente. Ajuste o estoque manualmente se necessário.
+          </span>
+        </div>
+      )}
+
+      <div className="mt-6 divide-y divide-line rounded-2xl border border-line">
+        {pedido.itens.map((item, i) => (
+          <ItemLinha key={i} item={item} />
+        ))}
+        <div className="flex items-center justify-between px-4 py-4 text-base font-semibold text-ink">
+          <span>Total</span>
+          <span>{formatBRL(pedido.total)}</span>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div className="rounded-2xl border border-line p-5 text-sm">
+          <p className="text-xs font-bold uppercase tracking-wider text-muted2">Cliente</p>
+          <p className="mt-1 text-ink">{pedido.nome}</p>
+          <p className="text-muted">{pedido.telefone}</p>
+        </div>
+        <div className="rounded-2xl border border-line p-5 text-sm">
+          <p className="text-xs font-bold uppercase tracking-wider text-muted2">Pagamento</p>
+          {pedido.gatewayPagamentoId ? (
+            <p className="mt-1 text-ink">Mercado Pago #{pedido.gatewayPagamentoId}</p>
+          ) : (
+            <p className="mt-1 text-muted">Sem pagamento registrado</p>
+          )}
+        </div>
+      </div>
+
+      {erro && (
+        <div className="mt-4">
+          <FormError>{erro}</FormError>
+        </div>
+      )}
+
+      {(proximo || podeCancelar) && (
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+          {podeCancelar && (
+            <Button
+              variant="secondary"
+              onClick={() => setConfirmarCancelar(true)}
+              disabled={processando}
+            >
+              Cancelar pedido
+            </Button>
+          )}
+          {proximo && (
+            <Button onClick={avancar} disabled={processando}>
+              {AVANCAR_LABEL[pedido.status] ?? "Avançar"}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      )}
+
+      <ConfirmModal
+        open={confirmarCancelar}
+        onClose={() => setConfirmarCancelar(false)}
+        onConfirm={cancelar}
+        loading={processando}
+        title="Cancelar pedido"
+        confirmLabel="Cancelar pedido"
+        message={
+          estornaAoCancelar
+            ? "O pagamento será estornado no Mercado Pago e o estoque devolvido. Esta ação não pode ser desfeita."
+            : "A reserva de estoque será liberada. Esta ação não pode ser desfeita."
+        }
+      />
+    </div>
+  );
+}
+
+function ItemLinha({ item }: { item: PedidoAdminDetalhe["itens"][number] }) {
+  return (
+    <div className="flex items-center gap-4 px-4 py-3">
+      <div className="relative h-16 w-14 shrink-0 overflow-hidden rounded-lg border border-line bg-surface">
+        {item.imagem ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={item.imagem} alt="" className="h-full w-full object-cover object-top" />
+        ) : (
+          <span className="flex h-full items-center justify-center text-muted2">
+            <ImageOff className="h-4 w-4" />
+          </span>
+        )}
+      </div>
+      <div className="min-w-0 flex-1 text-sm">
+        <p className="font-medium text-ink">{item.nomeProduto}</p>
+        <p className="text-xs text-muted">
+          {Object.values(item.combinacao).join(" · ")}
+          {" · "}
+          {item.quantidade}x · SKU {item.sku}
+        </p>
+      </div>
+      <span className="shrink-0 text-sm font-medium text-ink">
+        {formatBRL(Number(item.precoUnitario) * item.quantidade)}
+      </span>
+    </div>
+  );
+}
