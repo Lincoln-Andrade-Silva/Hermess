@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { useState } from "react";
 import type { ValorOpcao } from "@/db/schema";
 import { Button } from "@/components/ui";
@@ -140,15 +140,32 @@ export function Filtros({ grupos }: { grupos: GrupoFiltro[] }) {
           )}
         </button>
 
-        {/* Ordenação inline: rola na horizontal no mobile em vez de quebrar linha. */}
-        <div className="flex flex-1 gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] lg:ml-auto lg:flex-none [&::-webkit-scrollbar]:hidden">
+        {/* Mobile: select compacto — cabe ao lado do Filtros, sem scroll. */}
+        <div className="relative ml-auto lg:hidden">
+          <select
+            value={ordemAtual}
+            onChange={(e) => trocarOrdem(e.target.value)}
+            aria-label="Ordenar"
+            className="appearance-none rounded-lg border border-line bg-surface py-2.5 pl-3 pr-9 text-sm font-medium text-ink"
+          >
+            {ORDENS.map((ordem) => (
+              <option key={ordem.valor} value={ordem.valor}>
+                {ordem.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted2" />
+        </div>
+
+        {/* Desktop: opções inline. */}
+        <div className="ml-auto hidden gap-1 lg:flex">
           {ORDENS.map((ordem) => (
             <button
               key={ordem.valor}
               type="button"
               onClick={() => trocarOrdem(ordem.valor)}
               className={cn(
-                "shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium transition",
+                "whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium transition",
                 ordemAtual === ordem.valor ? "bg-surface2 text-ink" : "text-muted hover:text-ink",
               )}
             >
