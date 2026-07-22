@@ -1,10 +1,12 @@
 import {
   boolean,
+  index,
   integer,
   jsonb,
   numeric,
   pgEnum,
   pgTable,
+  serial,
   text,
   timestamp,
   unique,
@@ -182,3 +184,63 @@ export const lojaInfo = pgTable("loja_info", {
 
 export type LojaInfo = typeof lojaInfo.$inferSelect;
 export type NovaLojaInfo = typeof lojaInfo.$inferInsert;
+
+export const statusPedido = pgEnum("status_pedido", [
+  "aguardando_pagamento",
+  "pago",
+  "cancelado",
+  "expirado",
+]);
+
+/**
+ * Pedido de retirada. Nasce `aguardando_pagamento` reservando estoque das
+ * variações; o pagamento (Fase 5) o move para `pago`. Sem pagamento até
+ * `expiraEm`, a varredura preguiçosa devolve a reserva e o marca `expirado`.
+ */
+export const pedidos = pgTable(
+  "pedidos",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // Número curto e legível para o cliente e o balcão. Sequência própria.
+    numero: serial("numero").notNull().unique(),
+    clienteId: uuid("cliente_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "restrict" }),
+    // Snapshot do contato no momento da compra — o profile pode mudar depois.
+    nome: text("nome").notNull(),
+    telefone: text("telefone").notNull(),
+    status: statusPedido("status").notNull().default("aguardando_pagamento"),
+    total: numeric("total", { precision: 10, scale: 2 }).notNull(),
+    expiraEm: timestamp("expira_em", { withTimezone: true }).notNull(),
+    criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    // Varredura de expiração filtra por (status, expiraEm).
+    statusExpiraIdx: index("pedidos_status_expira_idx").on(t.status, t.expiraEm),
+    clienteIdx: index("pedidos_cliente_idx").on(t.clienteId),
+  }),
+);
+
+export type Pedido = typeof pedidos.$inferSelect;
+export type NovoPedido = typeof pedidos.$inferInsert;
+
+/**
+ * Item do pedido com preço e combinação congelados na compra — alterações
+ * futuras no produto não reescrevem o histórico. `variacaoId` vira nulo se a
+ * variação for excluída; a reserva já terá sido resolvida antes disso.
+ */
+export const pedidoItens = pgTable("pedido_itens", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  pedidoId: uuid("pedido_id")
+    .notNull()
+    .references(() => pedidos.id, { onDelete: "cascade" }),
+  variacaoId: uuid("variacao_id").references(() => produtosVariacoes.id, { onDelete: "set null" }),
+  nomeProduto: text("nome_produto").notNull(),
+  sku: text("sku").notNull(),
+  combinacao: jsonb("combinacao").$type<Combinacao>().notNull(),
+  precoUnitario: numeric("preco_unitario", { precision: 10, scale: 2 }).notNull(),
+  quantidade: integer("quantidade").notNull(),
+});
+
+export type PedidoItem = typeof pedidoItens.$inferSelect;
+export type NovoPedidoItem = typeof pedidoItens.$inferInsert;

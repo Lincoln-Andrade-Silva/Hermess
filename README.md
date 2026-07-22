@@ -56,7 +56,9 @@ produtos_variacoes   id, produto_id, sku, preco, estoque, reservado,
                      imagem_url, ativo, combinacao jsonb
 ```
 
-**Estoque** — reserva no checkout com expiração. Criar o pedido incrementa `reservado` na variação; o pagamento aprovado converte reserva em baixa de `estoque`; pedido não pago expira em 30 min (cron na Vercel) e devolve a reserva. Disponível para venda = `estoque - reservado`. Escolhido porque Pix e Checkout Pro são assíncronos: baixar só na aprovação deixa dois clientes pagarem a mesma última peça.
+**Estoque** — reserva no checkout com expiração. Criar o pedido incrementa `reservado` na variação (UPDATE condicional atômico: `estoque - reservado >= qtd` no WHERE, para dois checkouts pela última peça não passarem os dois); o pagamento aprovado converte reserva em baixa de `estoque` (Fase 5); pedido não pago expira em **15 min** e devolve a reserva. Disponível para venda = `estoque - reservado`. Escolhido porque Pix e Checkout Pro são assíncronos: baixar só na aprovação deixa dois clientes pagarem a mesma última peça.
+
+A liberação da reserva vencida é hoje uma **varredura preguiçosa** (roda no checkout e nas leituras de estoque da vitrine, sem cron); a troca por job agendado fica pra Fase 5.
 
 **Pagamento** — Checkout Pro, idêntico ao Chronoss. Credenciais no banco (configuráveis no admin), não no `.env`. Webhook valida HMAC do `x-signature` e **nunca confia no payload**: consulta o pagamento no MP e reflete no domínio. `external_reference` no formato `clienteId:pedidoId`.
 
@@ -86,8 +88,8 @@ aguardando_pagamento ─┬─> pago ─> separando ─> pronto_para_retirada �
 - [x] **Fase 1**: Auth — registro/login, `profiles` com tipo/status, proteção de rotas, seed admin, shell do painel
 
 **Catálogo**
-- [ ] **Fase 2**: Cadastro de produtos — categorias, produto, eixos de opção com tipo, geração de variações, galeria múltipla, tabela de medidas
-- [x] **Fase 3**: Vitrine pública — home, listagem com filtro por categoria/cor/tamanho/preço, página do produto com swatch trocando a galeria e tamanho esgotado visível
+- [x] **Fase 2**: Cadastro de produtos — categorias, produto, eixos de opção com tipo, geração de variações, galeria múltipla, ficha técnica genérica, clone de produto
+- [x] **Fase 3**: Vitrine pública — home, listagem com filtro por categoria/cor/tamanho, página do produto com swatch trocando a galeria e tamanho esgotado visível, banners configuráveis (Aparência)
 
 ### Notas de vitrine (Fase 3)
 
@@ -106,7 +108,7 @@ A nota exibida no card é da loja, não do produto, o que infla todos para 4.9. 
 **Consequência de schema:** o badge de "-14%" exige `preco_comparativo` em `produtos_variacoes` (o "de R$ X por R$ Y"), e o agrupamento por cor exige que a query de listagem já traga as variações agregadas. Ambos precisam nascer na Fase 2.
 
 **Venda**
-- [ ] **Fase 4**: Carrinho e checkout de retirada, com reserva de estoque
+- [x] **Fase 4**: Carrinho e checkout de retirada, com reserva de estoque — sacola client-side, checkout com login, pedido `aguardando_pagamento` reservando estoque (15 min), "Minha conta" com histórico
 - [ ] **Fase 5**: Pagamento — Checkout Pro, webhook, reconciliação, estorno, cron de expiração
 - [ ] **Fase 6**: Pedidos no admin — listagem, detalhe e máquina de estados
 - [ ] **Fase 7**: PDV — venda de balcão lançada pelo admin
@@ -115,7 +117,7 @@ A nota exibida no card é da loja, não do produto, o que infla todos para 4.9. 
 - [ ] **Fase 8**: Estoque — entrada, movimentações e alerta de estoque baixo
 - [ ] **Fase 9**: Dashboard — KPIs, gráficos e ranking de produtos, com filtro por período
 - [ ] **Fase 10**: Relatórios — faturamento, produtos, métodos de pagamento e estoque
-- [ ] **Fase 11**: Configurações — identidade da loja, credenciais do Mercado Pago, janela de retirada, usuários
+- [~] **Fase 11**: Configurações — identidade da loja (nome, logo, contato) **feita**; faltam credenciais do Mercado Pago, janela de retirada, usuários
 
 **Entrega**
 - [ ] **Fase 12**: Deploy (Vercel + Supabase + domínio)

@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { formatBRL } from "@/lib/format";
 import { Button } from "@/components/ui";
 import type { Combinacao } from "@/db/schema";
+import { useSacola } from "@/features/sacola/sacola-context";
 import type { ProdutoDetalhe } from "./queries";
 
 /**
@@ -18,8 +20,17 @@ import type { ProdutoDetalhe } from "./queries";
  *   que a peça existe naquele tamanho, só está sem saldo.
  */
 export function ProdutoDetalhe({ produto }: { produto: ProdutoDetalhe }) {
+  const { adicionar } = useSacola();
   const [selecao, setSelecao] = useState<Combinacao>(() => selecaoInicial(produto));
   const [imagemAtiva, setImagemAtiva] = useState(0);
+  const [adicionado, setAdicionado] = useState(false);
+
+  // Some o "adicionado" depois de um instante.
+  useEffect(() => {
+    if (!adicionado) return;
+    const t = setTimeout(() => setAdicionado(false), 2000);
+    return () => clearTimeout(t);
+  }, [adicionado]);
 
   // A variação exata que casa com a seleção atual, se existir.
   const variacaoAtual = useMemo(
@@ -52,6 +63,19 @@ export function ProdutoDetalhe({ produto }: { produto: ProdutoDetalhe }) {
 
   const semSelecaoCompleta = produto.opcoes.some((o) => !selecao[o.nome]);
   const indisponivel = !variacaoAtual || !variacaoAtual.disponivel;
+
+  function adicionarNaSacola() {
+    if (!variacaoAtual || indisponivel) return;
+    adicionar({
+      variacaoId: variacaoAtual.id,
+      produtoNome: produto.nome,
+      produtoSlug: produto.slug,
+      combinacao: variacaoAtual.combinacao,
+      preco: variacaoAtual.preco,
+      imagem: galeria[0] ?? null,
+    });
+    setAdicionado(true);
+  }
 
   return (
     <div className="grid gap-8 lg:grid-cols-2">
@@ -180,12 +204,20 @@ export function ProdutoDetalhe({ produto }: { produto: ProdutoDetalhe }) {
           <Button
             className="w-full py-4 text-base"
             disabled={semSelecaoCompleta || indisponivel}
+            onClick={adicionarNaSacola}
           >
-            {semSelecaoCompleta
-              ? "Selecione as opções"
-              : indisponivel
-                ? "Esgotado"
-                : "Adicionar à sacola"}
+            {adicionado ? (
+              <>
+                <Check className="h-5 w-5" />
+                Adicionado à sacola
+              </>
+            ) : semSelecaoCompleta ? (
+              "Selecione as opções"
+            ) : indisponivel ? (
+              "Esgotado"
+            ) : (
+              "Adicionar à sacola"
+            )}
           </Button>
           {!semSelecaoCompleta && indisponivel && (
             <p className="mt-2 text-center text-xs text-muted">
