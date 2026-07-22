@@ -52,7 +52,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
     label: "Sistema",
     items: [
       { label: "Aparência", href: "/admin/aparencia", icon: Image, ready: true },
-      { label: "Configurações", href: "/admin/configuracoes", icon: Settings, ready: false },
+      { label: "Configurações", href: "/admin/configuracoes", icon: Settings, ready: true },
     ],
   },
 ];

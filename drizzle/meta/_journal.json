@@ -57,6 +57,20 @@
       "when": 1784680384758,
       "tag": "0007_banners_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784682364718,
+      "tag": "0008_create_loja_info",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1784682364800,
+      "tag": "0009_loja_info_rls",
+      "breakpoints": true
     }
   ]
 }
