@@ -56,9 +56,9 @@ produtos_variacoes   id, produto_id, sku, preco, estoque, reservado,
                      imagem_url, ativo, combinacao jsonb
 ```
 
-**Estoque** — reserva no checkout com expiração. Criar o pedido incrementa `reservado` na variação (UPDATE condicional atômico: `estoque - reservado >= qtd` no WHERE, para dois checkouts pela última peça não passarem os dois); o pagamento aprovado converte reserva em baixa de `estoque` (Fase 5); pedido não pago expira em **15 min** e devolve a reserva. Disponível para venda = `estoque - reservado`. Escolhido porque Pix e Checkout Pro são assíncronos: baixar só na aprovação deixa dois clientes pagarem a mesma última peça.
+**Estoque** — reserva no checkout com expiração. Criar o pedido incrementa `reservado` na variação (UPDATE condicional atômico: `estoque - reservado >= qtd` no WHERE, para dois checkouts pela última peça não passarem os dois); o pagamento aprovado converte reserva em baixa de `estoque`; pedido não pago expira em **30 min** e devolve a reserva. Disponível para venda = `estoque - reservado`. Escolhido porque Pix e Checkout Pro são assíncronos: baixar só na aprovação deixa dois clientes pagarem a mesma última peça.
 
-A liberação da reserva vencida roda por **Vercel Cron** (`/api/cron/expirar-reservas`, a cada minuto, protegido por `CRON_SECRET`); o checkout também varre antes de reservar, garantindo saldo correto no momento decisivo.
+A liberação da reserva vencida é uma **varredura preguiçosa**: roda no checkout (antes de reservar, garantindo saldo correto no momento decisivo) e nas leituras de estoque da vitrine (mantendo a disponibilidade atualizada a cada navegação). O endpoint `/api/cron/expirar-reservas` (protegido por `CRON_SECRET`) existe como backstop para acionamento manual/externo, mas **não é agendado no `vercel.json`** — o cron do plano Hobby só permite execução diária, e a varredura preguiçosa já cobre o caso com qualquer tráfego.
 
 **Pagamento** — Checkout Pro, idêntico ao Chronoss. Credenciais no banco (configuráveis no admin), não no `.env`. Webhook valida HMAC do `x-signature` e **nunca confia no payload**: consulta o pagamento no MP e reflete no domínio. `external_reference` no formato `clienteId:pedidoId`.
 
