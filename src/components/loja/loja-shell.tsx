@@ -7,6 +7,7 @@ import { LayoutGrid, Menu, ShoppingBag, User, X } from "lucide-react";
 import type { Profile } from "@/db/schema";
 import { cn } from "@/lib/cn";
 import { LogoutButton } from "@/features/auth/logout-button";
+import { useSacola } from "@/features/sacola/sacola-context";
 
 /** Glifo do Instagram — o lucide removeu ícones de marca por trademark. */
 function InstagramIcon({ className }: { className?: string }) {
@@ -36,6 +37,25 @@ interface Props {
   categorias: { nome: string; slug: string }[];
   profile: Pick<Profile, "nome" | "tipo"> | null;
   children: React.ReactNode;
+}
+
+/** Ícone da sacola com contador; só mostra o badge após hidratar o carrinho. */
+function SacolaLink() {
+  const { quantidadeTotal, pronto } = useSacola();
+  return (
+    <Link
+      href="/sacola"
+      aria-label={`Sacola${pronto && quantidadeTotal > 0 ? ` (${quantidadeTotal})` : ""}`}
+      className="relative rounded-lg p-2.5 text-ink transition hover:bg-surface"
+    >
+      <ShoppingBag className="h-5 w-5" />
+      {pronto && quantidadeTotal > 0 && (
+        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-ink px-1 text-[10px] font-bold leading-none text-bg">
+          {quantidadeTotal > 99 ? "99+" : quantidadeTotal}
+        </span>
+      )}
+    </Link>
+  );
 }
 
 export function LojaShell({
@@ -117,13 +137,7 @@ export function LojaShell({
               )}
             </div>
 
-            <Link
-              href="/sacola"
-              aria-label="Sacola"
-              className="rounded-lg p-2.5 text-ink transition hover:bg-surface"
-            >
-              <ShoppingBag className="h-5 w-5" />
-            </Link>
+            <SacolaLink />
           </div>
         </div>
 

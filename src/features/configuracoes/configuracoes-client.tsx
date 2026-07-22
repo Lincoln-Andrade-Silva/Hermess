@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ImagePlus, Trash2 } from "lucide-react";
 import type { LojaInfo } from "@/db/schema";
+import { maskTelefone } from "@/lib/format";
 import { Button, Field, FormError, FormSuccess, Input, PageHeader } from "@/components/ui";
 import { enviarLogo, salvarConfiguracoes } from "./actions";
 
@@ -17,7 +18,7 @@ export function ConfiguracoesClient({ info }: { info: LojaInfo | null }) {
 
   const [nome, setNome] = useState(info?.nome ?? "");
   const [logoUrl, setLogoUrl] = useState<string | null>(info?.logoUrl ?? null);
-  const [telefone, setTelefone] = useState(info?.telefone ?? "");
+  const [telefone, setTelefone] = useState(maskTelefone(info?.telefone ?? ""));
   const [endereco, setEndereco] = useState(info?.endereco ?? "");
   const [instagram, setInstagram] = useState(info?.instagram ?? "");
 
@@ -112,8 +113,10 @@ export function ConfiguracoesClient({ info }: { info: LojaInfo | null }) {
           <Input
             id="cfg-telefone"
             value={telefone}
-            onChange={(e) => setTelefone(e.target.value)}
+            onChange={(e) => setTelefone(maskTelefone(e.target.value))}
             placeholder="(00) 00000-0000"
+            inputMode="tel"
+            maxLength={16}
           />
         </Field>
 

@@ -71,6 +71,20 @@
       "when": 1784682364800,
       "tag": "0009_loja_info_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1784721215298,
+      "tag": "0010_create_pedidos",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1784721215400,
+      "tag": "0011_pedidos_rls",
+      "breakpoints": true
     }
   ]
 }
