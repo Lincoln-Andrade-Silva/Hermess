@@ -5,16 +5,16 @@ import { cn } from "@/lib/cn";
 import type { ProdutoVitrine } from "./queries";
 
 /**
- * Card da vitrine. Uma linha por produto — as cores viram swatches dentro do
- * card em vez de ocupar seis posições da grade, que é o erro mais caro das
- * lojas que serviram de referência.
+ * Card da vitrine. Deliberadamente enxuto: foto dominante, nome e preço. As
+ * cores viram swatches pequenos que só aparecem no hover — chips de tamanho
+ * poluíam a grade e são informação de página de produto, não de listagem.
  */
 export function ProdutoCard({ produto, prioridade }: { produto: ProdutoVitrine; prioridade?: boolean }) {
   const faixaDePreco = produto.precoMax !== produto.precoMin;
 
   return (
     <Link href={`/produto/${produto.slug}`} className="group block">
-      <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-surface">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-surface">
         {produto.capa ? (
           <>
             <Image
@@ -24,18 +24,18 @@ export function ProdutoCard({ produto, prioridade }: { produto: ProdutoVitrine; 
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               priority={prioridade}
               className={cn(
-                "object-cover transition-opacity duration-500",
-                produto.verso && "group-hover:opacity-0",
+                "object-cover transition-all duration-700",
+                produto.disponivel ? "group-hover:scale-105" : "opacity-70 grayscale",
+                produto.verso && produto.disponivel && "group-hover:opacity-0",
               )}
             />
-            {/* Verso revelado no hover: em moda é o que mais move conversão. */}
-            {produto.verso && (
+            {produto.verso && produto.disponivel && (
               <Image
                 src={produto.verso}
                 alt=""
                 fill
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                className="scale-105 object-cover opacity-0 transition-opacity duration-700 group-hover:opacity-100"
               />
             )}
           </>
@@ -46,55 +46,40 @@ export function ProdutoCard({ produto, prioridade }: { produto: ProdutoVitrine; 
         )}
 
         {!produto.disponivel && (
-          <span className="absolute left-3 top-3 rounded bg-ink/90 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-bg">
-            Esgotado
-          </span>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="rounded-full border border-ink/15 bg-bg/85 px-4 py-1.5 font-display text-xs font-bold uppercase tracking-widest text-ink backdrop-blur">
+              Esgotado
+            </span>
+          </div>
         )}
-      </div>
 
-      <div className="mt-3 space-y-2">
-        <h3 className="font-display text-[15px] font-semibold uppercase leading-tight tracking-wide text-ink">
-          {produto.nome}
-        </h3>
-
-        <p className="text-sm font-semibold text-ink">
-          {faixaDePreco && <span className="text-xs font-normal text-muted">a partir de </span>}
-          {formatBRL(produto.precoMin)}
-        </p>
-
-        {produto.cores.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5">
+        {produto.cores.length > 1 && produto.disponivel && (
+          <div className="absolute bottom-3 left-3 flex items-center gap-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             {produto.cores.slice(0, 5).map((cor) => (
               <span
                 key={cor.valor}
                 title={cor.valor}
                 style={{ backgroundColor: cor.hex }}
-                className="h-4 w-4 rounded-full border border-line2"
+                className="h-3.5 w-3.5 rounded-full border border-white/80 shadow"
               />
             ))}
             {produto.cores.length > 5 && (
-              <span className="text-[11px] text-muted">+{produto.cores.length - 5}</span>
+              <span className="text-[10px] font-medium text-white drop-shadow">
+                +{produto.cores.length - 5}
+              </span>
             )}
           </div>
         )}
+      </div>
 
-        {produto.tamanhos.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {produto.tamanhos.map((tamanho) => (
-              <span
-                key={tamanho.valor}
-                className={cn(
-                  "rounded border px-1.5 py-0.5 text-[11px] font-medium",
-                  tamanho.disponivel
-                    ? "border-line2 text-muted"
-                    : "border-line text-muted2 line-through",
-                )}
-              >
-                {tamanho.valor}
-              </span>
-            ))}
-          </div>
-        )}
+      <div className="mt-3">
+        <h3 className="truncate font-display text-sm font-semibold uppercase tracking-wide text-ink transition-colors group-hover:text-muted">
+          {produto.nome}
+        </h3>
+        <p className="mt-0.5 text-sm text-ink">
+          {faixaDePreco && <span className="text-xs text-muted">a partir de </span>}
+          <span className="font-semibold">{formatBRL(produto.precoMin)}</span>
+        </p>
       </div>
     </Link>
   );

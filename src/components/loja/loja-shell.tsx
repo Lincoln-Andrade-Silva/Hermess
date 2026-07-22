@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, User, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { LayoutGrid, Menu, ShoppingBag, User, X } from "lucide-react";
 import type { Profile } from "@/db/schema";
 import { cn } from "@/lib/cn";
 import { LogoutButton } from "@/features/auth/logout-button";
@@ -17,69 +18,127 @@ interface Props {
 
 export function LojaShell({ nomeLoja, logoUrl, categorias, profile, children }: Props) {
   const [menuAberto, setMenuAberto] = useState(false);
+  const pathname = usePathname();
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
-          <button
-            type="button"
-            onClick={() => setMenuAberto(true)}
-            aria-label="Abrir menu"
-            className="-ml-2 rounded-lg p-2 text-ink transition hover:bg-surface lg:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
+      <header className="sticky top-0 z-40 border-b border-line bg-bg/90 backdrop-blur-md">
+        {/* Linha principal: menu/marca/ações. A marca fica centralizada como
+            em loja de moda, não espremida no canto. */}
+        <div className="mx-auto flex h-16 max-w-6xl items-center px-4 sm:px-6">
+          <div className="flex flex-1 items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setMenuAberto(true)}
+              aria-label="Abrir menu"
+              className="-ml-2 rounded-lg p-2 text-ink transition hover:bg-surface lg:hidden"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
 
-          <Link href="/" className="flex shrink-0 items-center gap-2">
+            {profile?.tipo === "admin" && (
+              <Link
+                href="/admin"
+                title="Painel administrativo"
+                className="hidden items-center justify-center gap-2 rounded-lg border border-line bg-transparent px-3 py-2 text-xs font-medium text-muted transition hover:border-ink hover:text-ink lg:inline-flex"
+              >
+                <LayoutGrid className="h-4 w-4" />
+                Painel
+              </Link>
+            )}
+          </div>
+
+          <Link
+            href="/"
+            className="flex shrink-0 items-center gap-2"
+            aria-label={`${nomeLoja} — início`}
+          >
             {logoUrl && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logoUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
             )}
-            <span className="font-display text-2xl font-extrabold uppercase tracking-wide text-ink">
+            <span className="font-display text-2xl font-extrabold uppercase tracking-[0.12em] text-ink">
               {nomeLoja}
             </span>
           </Link>
 
-          <nav className="ml-6 hidden flex-1 items-center gap-1 lg:flex">
-            {categorias.map((categoria) => (
+          <div className="flex flex-1 items-center justify-end gap-1">
+            {profile?.tipo === "admin" && (
               <Link
-                key={categoria.slug}
-                href={`/categoria/${categoria.slug}`}
-                className="rounded-lg px-3 py-2 font-display text-sm font-bold uppercase tracking-wide text-muted transition hover:text-ink"
+                href="/admin"
+                aria-label="Painel administrativo"
+                className="rounded-lg p-2.5 text-ink transition hover:bg-surface lg:hidden"
               >
-                {categoria.nome}
+                <LayoutGrid className="h-5 w-5" />
               </Link>
-            ))}
-          </nav>
+            )}
 
-          <div className="ml-auto flex items-center gap-2">
             {profile ? (
               <>
-                {profile.tipo === "admin" && (
-                  <Link
-                    href="/admin"
-                    className="hidden rounded-lg border border-line px-3 py-2 text-xs font-medium text-muted transition hover:bg-surface hover:text-ink sm:block"
-                  >
-                    Painel
-                  </Link>
-                )}
-                <span className="hidden text-sm text-muted sm:block">
-                  {profile.nome.split(" ")[0]}
-                </span>
-                <LogoutButton fullWidth={false} />
+                <Link
+                  href="/minha-conta"
+                  aria-label="Minha conta"
+                  className="rounded-lg p-2.5 text-ink transition hover:bg-surface"
+                >
+                  <User className="h-5 w-5" />
+                </Link>
+                <div className="hidden sm:block">
+                  <LogoutButton fullWidth={false} />
+                </div>
               </>
             ) : (
               <Link
                 href="/login"
-                className="flex items-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-bold text-white transition hover:bg-brand-dark"
+                aria-label="Entrar"
+                className="rounded-lg p-2.5 text-ink transition hover:bg-surface"
               >
-                <User className="h-4 w-4" />
-                <span className="hidden sm:inline">Entrar</span>
+                <User className="h-5 w-5" />
               </Link>
             )}
+
+            <Link
+              href="/sacola"
+              aria-label="Sacola"
+              className="rounded-lg p-2.5 text-ink transition hover:bg-surface"
+            >
+              <ShoppingBag className="h-5 w-5" />
+            </Link>
           </div>
         </div>
+
+        {/* Categorias numa faixa própria, centralizada — desktop só. */}
+        {categorias.length > 0 && (
+          <nav className="hidden justify-center gap-1 border-t border-line px-4 lg:flex">
+            <Link
+              href="/produtos"
+              className={cn(
+                "border-b-2 px-4 py-3 font-display text-sm font-bold uppercase tracking-wide transition",
+                pathname === "/produtos"
+                  ? "border-ink text-ink"
+                  : "border-transparent text-muted hover:text-ink",
+              )}
+            >
+              Tudo
+            </Link>
+            {categorias.map((categoria) => {
+              const href = `/categoria/${categoria.slug}`;
+              return (
+                <Link
+                  key={categoria.slug}
+                  href={href}
+                  className={cn(
+                    "border-b-2 px-4 py-3 font-display text-sm font-bold uppercase tracking-wide transition",
+                    pathname === href
+                      ? "border-ink text-ink"
+                      : "border-transparent text-muted hover:text-ink",
+                  )}
+                >
+                  {categoria.nome}
+                </Link>
+              );
+            })}
+          </nav>
+        )}
       </header>
 
       {menuAberto && (
@@ -118,18 +177,32 @@ export function LojaShell({ nomeLoja, logoUrl, categorias, profile, children }: 
                 </Link>
               ))}
             </nav>
+            {profile?.tipo === "admin" && (
+              <div className="mt-auto border-t border-line p-3">
+                <Link
+                  href="/admin"
+                  onClick={() => setMenuAberto(false)}
+                  className="block rounded-lg px-3 py-3 text-sm font-medium text-muted transition hover:bg-surface hover:text-ink"
+                >
+                  Painel admin
+                </Link>
+              </div>
+            )}
           </aside>
         </div>
       )}
 
       <main className="flex-1">{children}</main>
 
-      <footer className="mt-16 border-t border-line">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p className={cn("font-display text-lg font-extrabold uppercase tracking-wide text-ink")}>
+      <footer className="mt-20 border-t border-line bg-surface/40">
+        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+          <p className="font-display text-3xl font-extrabold uppercase tracking-wide text-ink">
             {nomeLoja}
           </p>
-          <p className="text-xs">Pagamento por Pix, crédito ou débito · Retirada no local</p>
+          <div className="mt-6 flex flex-col gap-4 border-t border-line pt-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
+            <p>Pagamento por Pix, crédito ou débito · Retirada no local</p>
+            <p>© {new Date().getFullYear()} {nomeLoja}</p>
+          </div>
         </div>
       </footer>
     </div>

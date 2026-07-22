@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   categorias,
@@ -53,23 +53,35 @@ interface FiltrosVitrine {
   page?: number;
 }
 
+/**
+ * Um único EXISTS que casa a seleção inteira numa mesma variação com saldo.
+ * Dentro de um eixo os valores são OR ("Preto ou Branco"); entre eixos é AND
+ * ("...e tamanho M"). Filtrar Preto+M não pode trazer a peça que só tem Preto
+ * no P e M no Branco — o cliente clicaria e não acharia o que pediu.
+ */
 function condicaoValores(valores: string[]) {
-  // Cada filtro vira um EXISTS próprio: "Preto E tamanho P" precisa existir
-  // numa mesma variação por eixo, não em variações diferentes.
-  return valores.map((par) => {
-    const separador = par.indexOf(":");
-    if (separador < 1) return sql`true`;
-    const eixo = par.slice(0, separador);
-    const valor = par.slice(separador + 1);
-    const alvo = JSON.stringify({ [eixo]: valor });
+  if (valores.length === 0) return undefined;
 
-    return sql`exists (
-      select 1 from ${produtosVariacoes} v
-      where v.produto_id = ${produtos.id} and v.ativo
-        and (v.estoque - v.reservado) > 0
-        and v.combinacao @> ${alvo}::jsonb
-    )`;
-  });
+  const porEixo = new Map<string, string[]>();
+  for (const par of valores) {
+    const sep = par.indexOf(":");
+    if (sep < 1) continue;
+    const eixo = par.slice(0, sep);
+    const valor = par.slice(sep + 1);
+    porEixo.set(eixo, [...(porEixo.get(eixo) ?? []), valor]);
+  }
+  if (porEixo.size === 0) return undefined;
+
+  const condicoesPorEixo = [...porEixo.entries()].map(
+    ([eixo, vals]) => sql`(v.combinacao->>${eixo}) in ${vals}`,
+  );
+
+  return sql`exists (
+    select 1 from ${produtosVariacoes} v
+    where v.produto_id = ${produtos.id} and v.ativo
+      and (v.estoque - v.reservado) > 0
+      and ${sql.join(condicoesPorEixo, sql` and `)}
+  )`;
 }
 
 export async function listarVitrine(filtros: FiltrosVitrine) {
@@ -78,7 +90,7 @@ export async function listarVitrine(filtros: FiltrosVitrine) {
   const where = and(
     eq(produtos.ativo, true),
     filtros.categoria ? eq(categorias.slug, filtros.categoria) : undefined,
-    ...condicaoValores(filtros.valores ?? []),
+    condicaoValores(filtros.valores ?? []),
   );
 
   const ordenacao = {
@@ -144,7 +156,7 @@ async function enriquecerComOpcoes(
     db
       .select()
       .from(produtosOpcoes)
-      .where(sql`${produtosOpcoes.produtoId} = any(${ids})`)
+      .where(inArray(produtosOpcoes.produtoId, ids))
       .orderBy(asc(produtosOpcoes.ordem)),
     db
       .select({
@@ -153,7 +165,7 @@ async function enriquecerComOpcoes(
         disponivel: sql<boolean>`${DISPONIVEL}`,
       })
       .from(produtosVariacoes)
-      .where(and(sql`${produtosVariacoes.produtoId} = any(${ids})`, eq(produtosVariacoes.ativo, true))),
+      .where(and(inArray(produtosVariacoes.produtoId, ids), eq(produtosVariacoes.ativo, true))),
   ]);
 
   return linhas.map((linha) => {
