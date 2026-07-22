@@ -5,6 +5,7 @@ import { CheckCircle2 } from "lucide-react";
 import { formatBRL, formatDataHora } from "@/lib/format";
 import { Badge } from "@/components/ui";
 import { buscarMeuPedido } from "@/features/pedidos/actions";
+import { BotaoPagar } from "@/features/pedidos/botao-pagar";
 import { STATUS_LABEL, STATUS_TONE } from "@/features/pedidos/status";
 
 export const dynamic = "force-dynamic";
@@ -33,10 +34,13 @@ export default async function PedidoPage({ params }: { params: { numero: string 
       </div>
 
       {aguardando && (
-        <p className="mt-6 rounded-xl border border-amber-600/20 bg-amber-50 px-4 py-3 text-center text-sm text-amber-800">
-          Reservamos seu estoque até {formatDataHora(pedido.expiraEm)}. O pagamento estará
-          disponível em breve.
-        </p>
+        <>
+          <p className="mt-6 rounded-xl border border-amber-600/20 bg-amber-50 px-4 py-3 text-center text-sm text-amber-800">
+            Reservamos seu estoque até {formatDataHora(pedido.expiraEm)}. Conclua o pagamento antes
+            disso.
+          </p>
+          <BotaoPagar numero={pedido.numero} />
+        </>
       )}
 
       <div className="mt-8 space-y-3 rounded-2xl border border-line p-5">

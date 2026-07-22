@@ -26,9 +26,10 @@ import { VariacoesGrade } from "./variacoes-grade";
 interface Props {
   produto: ProdutoCompleto | null;
   categorias: { id: string; nome: string }[];
+  taxaGateway: number;
 }
 
-export function ProdutoForm({ produto, categorias }: Props) {
+export function ProdutoForm({ produto, categorias, taxaGateway }: Props) {
   const router = useRouter();
   const [salvando, iniciarSalvamento] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
@@ -176,7 +177,12 @@ export function ProdutoForm({ produto, categorias }: Props) {
 
           <OpcoesEditor eixos={eixos} onChange={setEixos} iniciarMinimizado={produto !== null} />
 
-          <VariacoesGrade eixos={eixos} variacoes={variacoes} onChange={setVariacoes} />
+          <VariacoesGrade
+            eixos={eixos}
+            variacoes={variacoes}
+            onChange={setVariacoes}
+            taxaGateway={taxaGateway}
+          />
         </Card>
 
         <Card className="space-y-4">

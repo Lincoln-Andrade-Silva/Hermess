@@ -213,6 +213,11 @@ export const pedidos = pgTable(
     total: numeric("total", { precision: 10, scale: 2 }).notNull(),
     expiraEm: timestamp("expira_em", { withTimezone: true }).notNull(),
     criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+    // Id do pagamento no gateway (Mercado Pago), preenchido na reconciliação.
+    gatewayPagamentoId: text("gateway_pagamento_id"),
+    // Pagamento aprovou depois do pedido expirar (reserva já devolvida): o
+    // estoque não pôde ser baixado automaticamente e precisa de revisão manual.
+    pendenciaEstoque: boolean("pendencia_estoque").notNull().default(false),
   },
   (t) => ({
     // Varredura de expiração filtra por (status, expiraEm).
@@ -244,3 +249,22 @@ export const pedidoItens = pgTable("pedido_itens", {
 
 export type PedidoItem = typeof pedidoItens.$inferSelect;
 export type NovoPedidoItem = typeof pedidoItens.$inferInsert;
+
+/**
+ * Credenciais e taxa do gateway (Mercado Pago). Linha única. Segredos ficam só
+ * no servidor — RLS deny. `taxaGateway` é o percentual retido por venda, usado
+ * para exibir o líquido ao lojista no cadastro de produto.
+ */
+export const pagamentoConfig = pgTable("pagamento_config", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  accessToken: text("access_token"),
+  publicKey: text("public_key"),
+  webhookSecret: text("webhook_secret"),
+  siteUrl: text("site_url"),
+  taxaGateway: numeric("taxa_gateway", { precision: 5, scale: 2 }).notNull().default("4.99"),
+  ativo: boolean("ativo").notNull().default(false),
+  atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type PagamentoConfig = typeof pagamentoConfig.$inferSelect;
+export type NovaPagamentoConfig = typeof pagamentoConfig.$inferInsert;

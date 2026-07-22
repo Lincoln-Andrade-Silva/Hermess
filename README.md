@@ -58,7 +58,7 @@ produtos_variacoes   id, produto_id, sku, preco, estoque, reservado,
 
 **Estoque** — reserva no checkout com expiração. Criar o pedido incrementa `reservado` na variação (UPDATE condicional atômico: `estoque - reservado >= qtd` no WHERE, para dois checkouts pela última peça não passarem os dois); o pagamento aprovado converte reserva em baixa de `estoque` (Fase 5); pedido não pago expira em **15 min** e devolve a reserva. Disponível para venda = `estoque - reservado`. Escolhido porque Pix e Checkout Pro são assíncronos: baixar só na aprovação deixa dois clientes pagarem a mesma última peça.
 
-A liberação da reserva vencida é hoje uma **varredura preguiçosa** (roda no checkout e nas leituras de estoque da vitrine, sem cron); a troca por job agendado fica pra Fase 5.
+A liberação da reserva vencida roda por **Vercel Cron** (`/api/cron/expirar-reservas`, a cada minuto, protegido por `CRON_SECRET`); o checkout também varre antes de reservar, garantindo saldo correto no momento decisivo.
 
 **Pagamento** — Checkout Pro, idêntico ao Chronoss. Credenciais no banco (configuráveis no admin), não no `.env`. Webhook valida HMAC do `x-signature` e **nunca confia no payload**: consulta o pagamento no MP e reflete no domínio. `external_reference` no formato `clienteId:pedidoId`.
 
@@ -109,7 +109,7 @@ A nota exibida no card é da loja, não do produto, o que infla todos para 4.9. 
 
 **Venda**
 - [x] **Fase 4**: Carrinho e checkout de retirada, com reserva de estoque — sacola client-side, checkout com login, pedido `aguardando_pagamento` reservando estoque (15 min), "Minha conta" com histórico
-- [ ] **Fase 5**: Pagamento — Checkout Pro, webhook, reconciliação, estorno, cron de expiração
+- [x] **Fase 5**: Pagamento — Checkout Pro (Pix/crédito/débito), credenciais e taxa no banco, webhook com validação HMAC, reconciliação idempotente (reserva → baixa de estoque), estorno e cron de expiração; líquido por venda exibido no cadastro de produto
 - [ ] **Fase 6**: Pedidos no admin — listagem, detalhe e máquina de estados
 - [ ] **Fase 7**: PDV — venda de balcão lançada pelo admin
 
@@ -117,7 +117,7 @@ A nota exibida no card é da loja, não do produto, o que infla todos para 4.9. 
 - [ ] **Fase 8**: Estoque — entrada, movimentações e alerta de estoque baixo
 - [ ] **Fase 9**: Dashboard — KPIs, gráficos e ranking de produtos, com filtro por período
 - [ ] **Fase 10**: Relatórios — faturamento, produtos, métodos de pagamento e estoque
-- [~] **Fase 11**: Configurações — identidade da loja (nome, logo, contato) **feita**; faltam credenciais do Mercado Pago, janela de retirada, usuários
+- [~] **Fase 11**: Configurações — identidade da loja (nome, logo, contato) e credenciais/taxa do Mercado Pago **feitas**; faltam janela de retirada e usuários
 
 **Entrega**
 - [ ] **Fase 12**: Deploy (Vercel + Supabase + domínio)

@@ -1,6 +1,5 @@
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { liberarReservasVencidas } from "@/features/pedidos/reserva";
 import {
   categorias,
   produtos,
@@ -86,7 +85,6 @@ function condicaoValores(valores: string[]) {
 }
 
 export async function listarVitrine(filtros: FiltrosVitrine) {
-  await liberarReservasVencidas();
   const page = Math.max(1, filtros.page ?? 1);
 
   const where = and(
@@ -214,7 +212,6 @@ export interface ProdutoDetalhe {
 }
 
 export async function buscarProdutoPorSlug(slug: string): Promise<ProdutoDetalhe | null> {
-  await liberarReservasVencidas();
   const [produto] = await db
     .select({
       id: produtos.id,
