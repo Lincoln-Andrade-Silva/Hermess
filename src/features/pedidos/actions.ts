@@ -13,6 +13,7 @@ import {
 } from "@/db/schema";
 import { getCurrentProfile } from "@/lib/auth";
 import { RESERVA_MINUTOS } from "./constants";
+import { emailPedidoCriado } from "./emails";
 import { selecionarItensComImagem, type ItemComImagem } from "./itens";
 import { liberarReservasVencidas } from "./reserva";
 
@@ -22,8 +23,8 @@ const itemSchema = z.object({
 });
 
 const checkoutSchema = z.object({
-  nome: z.string().trim().min(2, "Informe seu nome.").max(120),
-  telefone: z.string().trim().min(8, "Informe um telefone válido.").max(30),
+  // Só usado quando o cadastro do cliente veio sem telefone.
+  telefone: z.string().trim().max(30).optional(),
   itens: z.array(itemSchema).min(1, "Sua sacola está vazia."),
 });
 
@@ -43,7 +44,13 @@ export async function finalizarPedido(input: CheckoutInput): Promise<ResultadoCh
   if (!parsed.success) {
     return { ok: false, erro: parsed.error.issues[0]?.message ?? "Dados inválidos." };
   }
-  const { nome, telefone, itens } = parsed.data;
+  const { itens } = parsed.data;
+
+  // Contato vem do cadastro (cliente logado). Só pede telefone se faltar lá.
+  const telefone = profile.telefone?.trim() || parsed.data.telefone?.trim() || "";
+  if (telefone.length < 8) {
+    return { ok: false, erro: "Informe um telefone para contato." };
+  }
 
   // Uma variação não pode aparecer duas vezes — some as quantidades antes.
   const somados = new Map<string, number>();
@@ -56,7 +63,7 @@ export async function finalizarPedido(input: CheckoutInput): Promise<ResultadoCh
   }));
 
   try {
-    const numero = await db.transaction(async (tx) => {
+    const criado = await db.transaction(async (tx) => {
       // Libera vencidos antes de disputar o saldo.
       await liberarReservasVencidas(tx);
 
@@ -113,8 +120,9 @@ export async function finalizarPedido(input: CheckoutInput): Promise<ResultadoCh
         .insert(pedidos)
         .values({
           clienteId: profile.id,
-          nome,
+          nome: profile.nome,
           telefone,
+          email: profile.email,
           total: total.toFixed(2),
           expiraEm,
         })
@@ -135,10 +143,11 @@ export async function finalizarPedido(input: CheckoutInput): Promise<ResultadoCh
         }),
       );
 
-      return pedido.numero;
+      return { id: pedido.id, numero: pedido.numero };
     });
 
-    return { ok: true, numero };
+    await emailPedidoCriado(criado.id);
+    return { ok: true, numero: criado.numero };
   } catch (e) {
     if (e instanceof IndisponivelError) return { ok: false, erro: e.message };
     throw e;

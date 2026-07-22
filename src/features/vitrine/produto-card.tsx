@@ -24,7 +24,7 @@ export function ProdutoCard({ produto, prioridade }: { produto: ProdutoVitrine; 
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               priority={prioridade}
               className={cn(
-                "object-cover transition-all duration-700",
+                "object-cover object-top transition-all duration-700",
                 produto.disponivel ? "group-hover:scale-105" : "opacity-70 grayscale",
                 produto.verso && produto.disponivel && "group-hover:opacity-0",
               )}
@@ -35,7 +35,7 @@ export function ProdutoCard({ produto, prioridade }: { produto: ProdutoVitrine; 
                 alt=""
                 fill
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="scale-105 object-cover opacity-0 transition-opacity duration-700 group-hover:opacity-100"
+                className="scale-105 object-cover object-top opacity-0 transition-opacity duration-700 group-hover:opacity-100"
               />
             )}
           </>

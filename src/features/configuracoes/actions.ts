@@ -25,6 +25,14 @@ const configSchema = z.object({
   telefone: z.string().trim().max(30).nullable().default(null),
   endereco: z.string().trim().max(300).nullable().default(null),
   instagram: z.string().trim().max(100).nullable().default(null),
+  emailNotificacao: z
+    .string()
+    .trim()
+    .max(200)
+    .email("E-mail de notificações inválido.")
+    .nullable()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : null)),
 });
 
 export type ConfiguracoesInput = z.input<typeof configSchema>;

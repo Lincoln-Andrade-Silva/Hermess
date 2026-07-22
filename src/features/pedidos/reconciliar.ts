@@ -2,27 +2,27 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { pedidos } from "@/db/schema";
 import { getPagamento, situacaoPagamento } from "@/lib/mercadopago";
+import { emailPedidoCancelado, emailPedidoPago } from "./emails";
 
 /** Estados em que o estoque já foi baixado — cancelar devolve ao estoque. */
 const STATUS_PAGOS = ["pago", "separando", "pronto_para_retirada"] as const;
 
 /**
  * Cancela o pedido devolvendo estoque/reserva, de forma idempotente e atômica.
- * A transição de status é condicional, então cancelamento pelo admin e o webhook
- * de estorno não devolvem estoque duas vezes: quem transiciona primeiro devolve,
- * o outro casa zero linhas e vira no-op. Não chama o gateway — o estorno em si é
- * responsabilidade de quem invoca (admin) ou já aconteceu (webhook).
+ * Devolve `true` só quando a transição realmente aconteceu (para o chamador
+ * disparar e-mail uma única vez). Cancelamento pelo admin e o webhook de estorno
+ * competem pela mesma transição condicional: quem transiciona primeiro devolve o
+ * estoque, o outro casa zero linhas e vira no-op. Não chama o gateway.
  */
 export async function aplicarCancelamento(
   pedidoId: string,
   gatewayPagamentoId?: string,
-): Promise<void> {
-  await db.transaction(async (tx) => {
+): Promise<boolean> {
+  return db.transaction(async (tx) => {
     const set = gatewayPagamentoId
       ? { status: "cancelado" as const, gatewayPagamentoId }
       : { status: "cancelado" as const };
 
-    // Pago (estoque baixado) → devolve ao estoque.
     const cancelados = await tx
       .update(pedidos)
       .set(set)
@@ -36,10 +36,9 @@ export async function aplicarCancelamento(
         from "pedido_itens" as i
         where i.variacao_id = v.id and i.pedido_id = ${pedidoId}
       `);
-      return;
+      return true;
     }
 
-    // Ainda aguardando pagamento → libera a reserva.
     const liberados = await tx
       .update(pedidos)
       .set(set)
@@ -53,8 +52,10 @@ export async function aplicarCancelamento(
         from "pedido_itens" as i
         where i.variacao_id = v.id and i.pedido_id = ${pedidoId}
       `);
+      return true;
     }
-    // Já cancelado/expirado/retirado: no-op (idempotente).
+
+    return false; // Já cancelado/expirado/retirado: no-op.
   });
 }
 
@@ -75,7 +76,7 @@ export async function reconciliarPagamentoPedido(paymentId: string): Promise<voi
   const gatewayPagamentoId = String(pag.id);
 
   if (situacao === "aprovado") {
-    await db.transaction(async (tx) => {
+    const virouPago = await db.transaction(async (tx) => {
       const convertidos = await tx
         .update(pedidos)
         .set({ status: "pago", gatewayPagamentoId })
@@ -91,7 +92,7 @@ export async function reconciliarPagamentoPedido(paymentId: string): Promise<voi
           from "pedido_itens" as i
           where i.variacao_id = v.id and i.pedido_id = ${pedidoId}
         `);
-        return;
+        return true;
       }
 
       // Não estava aguardando: ou já está pago (idempotente, no-op) ou expirou.
@@ -100,18 +101,22 @@ export async function reconciliarPagamentoPedido(paymentId: string): Promise<voi
         .from(pedidos)
         .where(eq(pedidos.id, pedidoId));
       if (atual?.status === "expirado") {
-        // Reserva já foi devolvida; honra o pagamento mas sinaliza revisão manual.
         await tx
           .update(pedidos)
           .set({ status: "pago", gatewayPagamentoId, pendenciaEstoque: true })
           .where(eq(pedidos.id, pedidoId));
+        return true;
       }
+      return false;
     });
+
+    if (virouPago) await emailPedidoPago(pedidoId);
     return;
   }
 
   if (situacao === "estornado") {
-    await aplicarCancelamento(pedidoId, gatewayPagamentoId);
+    const cancelou = await aplicarCancelamento(pedidoId, gatewayPagamentoId);
+    if (cancelou) await emailPedidoCancelado(pedidoId);
   }
   // Pendente (Pix aguardando, cartão em processamento): pedido segue aguardando.
 }

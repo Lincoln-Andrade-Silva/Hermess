@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Sacola" };
 export default async function SacolaPage() {
   const profile = await getProfileOpcional();
   const cliente = profile
-    ? { nome: profile.nome, telefone: profile.telefone ?? "" }
+    ? { nome: profile.nome, telefone: profile.telefone ?? "", email: profile.email }
     : null;
 
   return <SacolaClient cliente={cliente} />;
