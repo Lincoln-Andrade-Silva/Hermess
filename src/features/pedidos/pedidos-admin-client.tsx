@@ -23,6 +23,7 @@ function StatusCelula({ pedido }: { pedido: PedidoLinha }) {
   return (
     <div className="flex items-center gap-1.5">
       <Badge tone={STATUS_TONE[pedido.status]}>{STATUS_LABEL[pedido.status]}</Badge>
+      {pedido.canal === "pdv" && <Badge tone="muted">Balcão</Badge>}
       {pedido.pendenciaEstoque && (
         <AlertTriangle className="h-4 w-4 text-amber-600" aria-label="Pendência de estoque" />
       )}

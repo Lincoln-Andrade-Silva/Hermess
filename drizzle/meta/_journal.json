@@ -134,6 +134,13 @@
       "when": 1784757499341,
       "tag": "0018_preco_custo_e_nf",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1784758698687,
+      "tag": "0019_pdv_canal_venda",
+      "breakpoints": true
     }
   ]
 }

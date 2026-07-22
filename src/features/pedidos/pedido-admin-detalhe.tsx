@@ -9,6 +9,13 @@ import { formatBRL, formatDataHora } from "@/lib/format";
 import { avancarStatus, cancelarPedido, type PedidoAdminDetalhe } from "./admin-actions";
 import { AVANCAR_LABEL, CANCELAVEIS, PROXIMO_STATUS, STATUS_LABEL, STATUS_TONE } from "./status";
 
+const METODO_LABEL: Record<string, string> = {
+  dinheiro: "Dinheiro",
+  pix: "Pix",
+  credito: "Crédito",
+  debito: "Débito",
+};
+
 export function PedidoAdminDetalheView({ pedido }: { pedido: PedidoAdminDetalhe }) {
   const router = useRouter();
   const [processando, iniciar] = useTransition();
@@ -84,7 +91,9 @@ export function PedidoAdminDetalheView({ pedido }: { pedido: PedidoAdminDetalhe 
         </div>
         <div className="rounded-2xl border border-line p-5 text-sm">
           <p className="text-xs font-bold uppercase tracking-wider text-muted2">Pagamento</p>
-          {pedido.gatewayPagamentoId ? (
+          {pedido.canal === "pdv" ? (
+            <p className="mt-1 text-ink">Balcão · {METODO_LABEL[pedido.metodoPagamento ?? ""] ?? "—"}</p>
+          ) : pedido.gatewayPagamentoId ? (
             <p className="mt-1 text-ink">Mercado Pago #{pedido.gatewayPagamentoId}</p>
           ) : (
             <p className="mt-1 text-muted">Sem pagamento registrado</p>

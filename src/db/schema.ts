@@ -241,10 +241,13 @@ export const statusPedido = pgEnum("status_pedido", [
   "retirado",
 ]);
 
+/** Canal da venda: loja online (checkout) ou balcão (PDV lançado pelo admin). */
+export const canalVenda = pgEnum("canal_venda", ["online", "pdv"]);
+
 /**
- * Pedido de retirada. Nasce `aguardando_pagamento` reservando estoque das
- * variações; o pagamento (Fase 5) o move para `pago`. Sem pagamento até
- * `expiraEm`, a varredura preguiçosa devolve a reserva e o marca `expirado`.
+ * Pedido/venda. Online nasce `aguardando_pagamento` reservando estoque; o
+ * pagamento o move para `pago`. Venda de balcão (PDV) nasce já `retirado`,
+ * baixando o estoque na hora. `expiraEm` só importa no fluxo online.
  */
 export const pedidos = pgTable(
   "pedidos",
@@ -252,13 +255,15 @@ export const pedidos = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     // Número curto e legível para o cliente e o balcão. Sequência própria.
     numero: serial("numero").notNull().unique(),
-    clienteId: uuid("cliente_id")
-      .notNull()
-      .references(() => profiles.id, { onDelete: "restrict" }),
+    // Nulo na venda de balcão sem cliente cadastrado.
+    clienteId: uuid("cliente_id").references(() => profiles.id, { onDelete: "restrict" }),
     // Snapshot do contato no momento da compra — o profile pode mudar depois.
     nome: text("nome").notNull(),
     telefone: text("telefone").notNull(),
     email: text("email"),
+    canal: canalVenda("canal").notNull().default("online"),
+    // Método informado no PDV (dinheiro, pix, crédito, débito). Nulo no online.
+    metodoPagamento: text("metodo_pagamento"),
     status: statusPedido("status").notNull().default("aguardando_pagamento"),
     total: numeric("total", { precision: 10, scale: 2 }).notNull(),
     expiraEm: timestamp("expira_em", { withTimezone: true }).notNull(),
