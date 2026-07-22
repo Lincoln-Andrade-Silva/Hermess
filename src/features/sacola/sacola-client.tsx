@@ -4,31 +4,38 @@ import { useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { Mail, Minus, Phone, Plus, ShoppingBag, Trash2, User } from "lucide-react";
 import { formatBRL, maskTelefone } from "@/lib/format";
 import { Button, Field, FormError, Input } from "@/components/ui";
 import { finalizarPedido } from "@/features/pedidos/actions";
 import { RESERVA_MINUTOS } from "@/features/pedidos/constants";
 import { useSacola, type ItemSacola } from "./sacola-context";
 
+interface Cliente {
+  nome: string;
+  telefone: string;
+  email: string;
+}
+
 function descreverCombinacao(item: ItemSacola): string {
   return Object.values(item.combinacao).join(" · ");
 }
 
-export function SacolaClient({ cliente }: { cliente: { nome: string; telefone: string } | null }) {
+export function SacolaClient({ cliente }: { cliente: Cliente | null }) {
   const router = useRouter();
   const { itens, pronto, subtotal, definirQuantidade, remover, limpar } = useSacola();
-  const [nome, setNome] = useState(cliente?.nome ?? "");
-  const [telefone, setTelefone] = useState(maskTelefone(cliente?.telefone ?? ""));
+  const [telefone, setTelefone] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, iniciar] = useTransition();
+
+  // Cadastro sem telefone: é o único dado que ainda precisamos pedir.
+  const precisaTelefone = Boolean(cliente) && !cliente!.telefone.trim();
 
   function finalizar() {
     setErro(null);
     iniciar(async () => {
       const r = await finalizarPedido({
-        nome,
-        telefone,
+        telefone: precisaTelefone ? telefone : undefined,
         itens: itens.map((i) => ({ variacaoId: i.variacaoId, quantidade: i.quantidade })),
       });
       if (!r.ok) {
@@ -82,7 +89,7 @@ export function SacolaClient({ cliente }: { cliente: { nome: string; telefone: s
                 className="relative aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-lg bg-surface sm:w-24"
               >
                 {item.imagem ? (
-                  <Image src={item.imagem} alt="" fill sizes="96px" className="object-cover" />
+                  <Image src={item.imagem} alt="" fill sizes="96px" className="object-cover object-top" />
                 ) : (
                   <span className="flex h-full items-center justify-center text-[10px] text-muted2">
                     sem imagem
@@ -151,19 +158,39 @@ export function SacolaClient({ cliente }: { cliente: { nome: string; telefone: s
             <div className="border-t border-line pt-4">
               {cliente ? (
                 <div className="space-y-3">
-                  <Field label="Nome" htmlFor="sac-nome">
-                    <Input id="sac-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
-                  </Field>
-                  <Field label="Telefone / WhatsApp" htmlFor="sac-telefone">
-                    <Input
-                      id="sac-telefone"
-                      value={telefone}
-                      onChange={(e) => setTelefone(maskTelefone(e.target.value))}
-                      placeholder="(00) 00000-0000"
-                      inputMode="tel"
-                      maxLength={16}
-                    />
-                  </Field>
+                  {/* Dados do cadastro — informativo, sem edição. */}
+                  <div className="space-y-2 rounded-xl bg-surface/50 p-4">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted2">
+                      Retirada em nome de
+                    </p>
+                    <p className="flex items-center gap-2 text-sm font-medium text-ink">
+                      <User className="h-4 w-4 shrink-0 text-muted2" />
+                      {cliente.nome}
+                    </p>
+                    <p className="flex items-center gap-2 text-sm text-muted">
+                      <Mail className="h-4 w-4 shrink-0 text-muted2" />
+                      {cliente.email}
+                    </p>
+                    {cliente.telefone.trim() && (
+                      <p className="flex items-center gap-2 text-sm text-muted">
+                        <Phone className="h-4 w-4 shrink-0 text-muted2" />
+                        {maskTelefone(cliente.telefone)}
+                      </p>
+                    )}
+                  </div>
+
+                  {precisaTelefone && (
+                    <Field label="Telefone / WhatsApp" htmlFor="sac-telefone" hint="(para contato)">
+                      <Input
+                        id="sac-telefone"
+                        value={telefone}
+                        onChange={(e) => setTelefone(maskTelefone(e.target.value))}
+                        placeholder="(00) 00000-0000"
+                        inputMode="tel"
+                        maxLength={16}
+                      />
+                    </Field>
+                  )}
 
                   {erro && <FormError>{erro}</FormError>}
 

@@ -89,7 +89,7 @@ export function ProdutoDetalhe({ produto }: { produto: ProdutoDetalhe }) {
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority
-              className="object-cover"
+              className="object-cover object-top"
             />
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-muted2">
@@ -111,7 +111,7 @@ export function ProdutoDetalhe({ produto }: { produto: ProdutoDetalhe }) {
                   i === imagemAtiva ? "border-ink" : "border-transparent hover:border-line2",
                 )}
               >
-                <Image src={url} alt="" fill sizes="20vw" className="object-cover" />
+                <Image src={url} alt="" fill sizes="20vw" className="object-cover object-top" />
               </button>
             ))}
           </div>

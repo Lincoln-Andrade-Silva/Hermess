@@ -7,6 +7,7 @@ import { pedidoItens, pedidos, statusPedido, type Pedido } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { estornarPagamento } from "@/lib/mercadopago";
 import { offsetDaPagina, PAGE_SIZE, parsePagina, totalPaginas } from "@/lib/pagination";
+import { emailPedidoCancelado, emailPedidoPronto } from "./emails";
 import { selecionarItensComImagem, type ItemComImagem } from "./itens";
 import { aplicarCancelamento } from "./reconciliar";
 import { CANCELAVEIS, PROXIMO_STATUS } from "./status";
@@ -133,6 +134,8 @@ export async function avancarStatus(numero: number): Promise<ResultadoAcao> {
     .set({ status: proximo })
     .where(and(eq(pedidos.id, pedido.id), eq(pedidos.status, pedido.status)));
 
+  if (proximo === "pronto_para_retirada") await emailPedidoPronto(pedido.id);
+
   revalidatePath("/admin/pedidos");
   revalidatePath(`/admin/pedidos/${numero}`);
   return { ok: true };
@@ -190,7 +193,8 @@ export async function cancelarPedido(numero: number): Promise<ResultadoAcao> {
     }
   }
 
-  await aplicarCancelamento(pedido.id);
+  const cancelou = await aplicarCancelamento(pedido.id);
+  if (cancelou) await emailPedidoCancelado(pedido.id);
 
   revalidatePath("/admin/pedidos");
   revalidatePath(`/admin/pedidos/${numero}`);

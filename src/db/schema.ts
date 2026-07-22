@@ -179,6 +179,8 @@ export const lojaInfo = pgTable("loja_info", {
   telefone: text("telefone"),
   endereco: text("endereco"),
   instagram: text("instagram"),
+  // Para onde a loja recebe os avisos de pedido. Nulo = não notifica a empresa.
+  emailNotificacao: text("email_notificacao"),
   atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -213,6 +215,7 @@ export const pedidos = pgTable(
     // Snapshot do contato no momento da compra — o profile pode mudar depois.
     nome: text("nome").notNull(),
     telefone: text("telefone").notNull(),
+    email: text("email"),
     status: statusPedido("status").notNull().default("aguardando_pagamento"),
     total: numeric("total", { precision: 10, scale: 2 }).notNull(),
     expiraEm: timestamp("expira_em", { withTimezone: true }).notNull(),

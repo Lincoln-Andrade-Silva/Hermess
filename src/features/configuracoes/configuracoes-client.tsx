@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ImagePlus, Trash2 } from "lucide-react";
+import { Camera, ImagePlus, X } from "lucide-react";
 import type { LojaInfo } from "@/db/schema";
 import { maskTelefone } from "@/lib/format";
 import { Button, Field, FormError, FormSuccess, Input, PageHeader } from "@/components/ui";
@@ -21,6 +21,7 @@ export function ConfiguracoesClient({ info }: { info: LojaInfo | null }) {
   const [telefone, setTelefone] = useState(maskTelefone(info?.telefone ?? ""));
   const [endereco, setEndereco] = useState(info?.endereco ?? "");
   const [instagram, setInstagram] = useState(info?.instagram ?? "");
+  const [emailNotificacao, setEmailNotificacao] = useState(info?.emailNotificacao ?? "");
 
   function selecionarLogo(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -46,6 +47,7 @@ export function ConfiguracoesClient({ info }: { info: LojaInfo | null }) {
         telefone: telefone.trim() || null,
         endereco: endereco.trim() || null,
         instagram: instagram.trim() || null,
+        emailNotificacao: emailNotificacao.trim() || null,
       });
       if (!r.ok) {
         setErro(r.erro ?? "Não foi possível salvar.");
@@ -65,30 +67,39 @@ export function ConfiguracoesClient({ info }: { info: LojaInfo | null }) {
 
       <div className="max-w-2xl space-y-6">
         <Field label="Logo" hint="(opcional, quadrada — png, jpeg, webp ou avif até 5MB)">
-          <div className="flex items-center gap-4">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-surface">
-              {logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={logoUrl} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <ImagePlus className="h-6 w-6 text-muted2" strokeWidth={1.5} />
-              )}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="secondary"
+          <div className="flex flex-col items-center gap-2 py-2">
+            <div className="relative">
+              <button
+                type="button"
                 onClick={() => inputLogo.current?.click()}
                 disabled={enviandoLogo}
+                aria-label={logoUrl ? "Trocar logo" : "Enviar logo"}
+                className="group relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-line bg-surface transition hover:border-ink disabled:opacity-60"
               >
-                {enviandoLogo ? "Enviando..." : logoUrl ? "Trocar logo" : "Enviar logo"}
-              </Button>
-              {logoUrl && (
-                <Button variant="secondary" onClick={() => setLogoUrl(null)} disabled={enviandoLogo}>
-                  <Trash2 className="h-4 w-4" />
-                  Remover
-                </Button>
+                {logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <ImagePlus className="h-7 w-7 text-muted2" strokeWidth={1.5} />
+                )}
+                <span className="absolute inset-0 flex items-center justify-center bg-black/45 text-white opacity-0 transition group-hover:opacity-100">
+                  <Camera className="h-6 w-6" strokeWidth={1.5} />
+                </span>
+              </button>
+              {logoUrl && !enviandoLogo && (
+                <button
+                  type="button"
+                  onClick={() => setLogoUrl(null)}
+                  aria-label="Remover logo"
+                  className="absolute -right-1 -top-1 rounded-full border border-line bg-bg p-1.5 text-muted shadow-sm transition hover:border-red-600 hover:text-red-600"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
               )}
             </div>
+            <p className="text-xs text-muted">
+              {enviandoLogo ? "Enviando..." : logoUrl ? "Clique para trocar" : "Clique para enviar a logo"}
+            </p>
           </div>
           <input
             ref={inputLogo}
@@ -135,6 +146,20 @@ export function ConfiguracoesClient({ info }: { info: LojaInfo | null }) {
             value={instagram}
             onChange={(e) => setInstagram(e.target.value)}
             placeholder="minhaloja"
+          />
+        </Field>
+
+        <Field
+          label="E-mail para notificações"
+          htmlFor="cfg-email"
+          hint="(recebe aviso a cada pedido)"
+        >
+          <Input
+            id="cfg-email"
+            type="email"
+            value={emailNotificacao}
+            onChange={(e) => setEmailNotificacao(e.target.value)}
+            placeholder="loja@exemplo.com"
           />
         </Field>
 
