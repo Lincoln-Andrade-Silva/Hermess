@@ -87,7 +87,7 @@ aguardando_pagamento ─┬─> pago ─> separando ─> pronto_para_retirada �
 
 **Catálogo**
 - [ ] **Fase 2**: Cadastro de produtos — categorias, produto, eixos de opção com tipo, geração de variações, galeria múltipla, tabela de medidas
-- [ ] **Fase 3**: Vitrine pública — home, listagem com filtro por categoria/cor/tamanho/preço, página do produto com swatch trocando a galeria e tamanho esgotado visível
+- [x] **Fase 3**: Vitrine pública — home, listagem com filtro por categoria/cor/tamanho/preço, página do produto com swatch trocando a galeria e tamanho esgotado visível
 
 ### Notas de vitrine (Fase 3)
 

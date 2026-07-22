@@ -2,6 +2,7 @@ import {
   BarChart3,
   Boxes,
   Gauge,
+  Image,
   Package,
   Receipt,
   Settings,
@@ -49,6 +50,9 @@ export const ADMIN_NAV: AdminNavSection[] = [
   },
   {
     label: "Sistema",
-    items: [{ label: "Configurações", href: "/admin/configuracoes", icon: Settings, ready: false }],
+    items: [
+      { label: "Aparência", href: "/admin/aparencia", icon: Image, ready: true },
+      { label: "Configurações", href: "/admin/configuracoes", icon: Settings, ready: false },
+    ],
   },
 ];

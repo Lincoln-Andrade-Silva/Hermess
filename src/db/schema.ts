@@ -143,3 +143,24 @@ export const produtosVariacoes = pgTable(
 
 export type ProdutoVariacao = typeof produtosVariacoes.$inferSelect;
 export type NovaProdutoVariacao = typeof produtosVariacoes.$inferInsert;
+
+/**
+ * Banners da home. Arte pronta enviada pelo lojista — o sistema não sobrepõe
+ * texto. A imagem mobile é separada porque a proporção larga de um banner de
+ * desktop fica ruim no celular; quando ausente, cai para a de desktop.
+ */
+export const banners = pgTable("banners", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  imagemUrl: text("imagem_url").notNull(),
+  imagemMobileUrl: text("imagem_mobile_url"),
+  // Destino do clique. Nulo = banner não é clicável.
+  link: text("link"),
+  // Texto alternativo para acessibilidade e SEO.
+  alt: text("alt"),
+  ordem: integer("ordem").notNull().default(0),
+  ativo: boolean("ativo").notNull().default(true),
+  criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type Banner = typeof banners.$inferSelect;
+export type NovoBanner = typeof banners.$inferInsert;
