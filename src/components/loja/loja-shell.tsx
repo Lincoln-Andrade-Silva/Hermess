@@ -8,15 +8,45 @@ import type { Profile } from "@/db/schema";
 import { cn } from "@/lib/cn";
 import { LogoutButton } from "@/features/auth/logout-button";
 
+/** Glifo do Instagram — o lucide removeu ícones de marca por trademark. */
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className={className}
+    >
+      <rect x="2" y="2" width="20" height="20" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 interface Props {
   nomeLoja: string;
   logoUrl: string | null;
+  endereco?: string | null;
+  instagram?: string | null;
   categorias: { nome: string; slug: string }[];
   profile: Pick<Profile, "nome" | "tipo"> | null;
   children: React.ReactNode;
 }
 
-export function LojaShell({ nomeLoja, logoUrl, categorias, profile, children }: Props) {
+export function LojaShell({
+  nomeLoja,
+  logoUrl,
+  endereco,
+  instagram,
+  categorias,
+  profile,
+  children,
+}: Props) {
   const [menuAberto, setMenuAberto] = useState(false);
   const pathname = usePathname();
 
@@ -50,51 +80,42 @@ export function LojaShell({ nomeLoja, logoUrl, categorias, profile, children }: 
 
           <Link
             href="/"
-            className="flex shrink-0 items-center gap-2"
+            className="flex shrink-0 items-center gap-2 px-2"
             aria-label={`${nomeLoja} — início`}
           >
             {logoUrl && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+              <img src={logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
             )}
-            <span className="font-display text-2xl font-extrabold uppercase tracking-[0.12em] text-ink">
+            <span className="whitespace-nowrap font-display text-base font-extrabold uppercase tracking-[0.06em] text-ink sm:text-lg">
               {nomeLoja}
             </span>
           </Link>
 
           <div className="flex flex-1 items-center justify-end gap-1">
-            {profile?.tipo === "admin" && (
-              <Link
-                href="/admin"
-                aria-label="Painel administrativo"
-                className="rounded-lg p-2.5 text-ink transition hover:bg-surface lg:hidden"
-              >
-                <LayoutGrid className="h-5 w-5" />
-              </Link>
-            )}
-
-            {profile ? (
-              <>
+            {/* Conta some do header no mobile — vai para o menu lateral. */}
+            <div className="hidden items-center gap-1 sm:flex">
+              {profile ? (
+                <>
+                  <Link
+                    href="/minha-conta"
+                    aria-label="Minha conta"
+                    className="rounded-lg p-2.5 text-ink transition hover:bg-surface"
+                  >
+                    <User className="h-5 w-5" />
+                  </Link>
+                  <LogoutButton fullWidth={false} />
+                </>
+              ) : (
                 <Link
-                  href="/minha-conta"
-                  aria-label="Minha conta"
+                  href="/login"
+                  aria-label="Entrar"
                   className="rounded-lg p-2.5 text-ink transition hover:bg-surface"
                 >
                   <User className="h-5 w-5" />
                 </Link>
-                <div className="hidden sm:block">
-                  <LogoutButton fullWidth={false} />
-                </div>
-              </>
-            ) : (
-              <Link
-                href="/login"
-                aria-label="Entrar"
-                className="rounded-lg p-2.5 text-ink transition hover:bg-surface"
-              >
-                <User className="h-5 w-5" />
-              </Link>
-            )}
+              )}
+            </div>
 
             <Link
               href="/sacola"
@@ -146,8 +167,14 @@ export function LojaShell({ nomeLoja, logoUrl, categorias, profile, children }: 
           <div className="absolute inset-0 bg-black/40" onClick={() => setMenuAberto(false)} aria-hidden />
           <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-bg shadow-2xl">
             <div className="flex items-center justify-between border-b border-line px-5 py-4">
-              <span className="font-display text-xl font-extrabold uppercase tracking-wide">
-                {nomeLoja}
+              <span className="flex min-w-0 items-center gap-2">
+                {logoUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoUrl} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover" />
+                )}
+                <span className="truncate font-display text-lg font-extrabold uppercase tracking-wide">
+                  {nomeLoja}
+                </span>
               </span>
               <button
                 type="button"
@@ -177,17 +204,42 @@ export function LojaShell({ nomeLoja, logoUrl, categorias, profile, children }: 
                 </Link>
               ))}
             </nav>
-            {profile?.tipo === "admin" && (
-              <div className="mt-auto border-t border-line p-3">
+            <div className="mt-auto border-t border-line p-3">
+              {profile ? (
+                <>
+                  <Link
+                    href="/minha-conta"
+                    onClick={() => setMenuAberto(false)}
+                    className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-ink transition hover:bg-surface"
+                  >
+                    <User className="h-4 w-4" />
+                    Minha conta
+                  </Link>
+                  {profile.tipo === "admin" && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMenuAberto(false)}
+                      className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-muted transition hover:bg-surface hover:text-ink"
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                      Painel admin
+                    </Link>
+                  )}
+                  <div className="px-3 pt-2">
+                    <LogoutButton />
+                  </div>
+                </>
+              ) : (
                 <Link
-                  href="/admin"
+                  href="/login"
                   onClick={() => setMenuAberto(false)}
-                  className="block rounded-lg px-3 py-3 text-sm font-medium text-muted transition hover:bg-surface hover:text-ink"
+                  className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-ink transition hover:bg-surface"
                 >
-                  Painel admin
+                  <User className="h-4 w-4" />
+                  Entrar / criar conta
                 </Link>
-              </div>
-            )}
+              )}
+            </div>
           </aside>
         </div>
       )}
@@ -196,9 +248,31 @@ export function LojaShell({ nomeLoja, logoUrl, categorias, profile, children }: 
 
       <footer className="mt-20 border-t border-line bg-surface/40">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-          <p className="font-display text-3xl font-extrabold uppercase tracking-wide text-ink">
-            {nomeLoja}
-          </p>
+          <div className="flex items-center gap-3">
+            {logoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+            )}
+            <p className="font-display text-3xl font-extrabold uppercase tracking-wide text-ink">
+              {nomeLoja}
+            </p>
+          </div>
+          {(endereco || instagram) && (
+            <div className="mt-4 flex flex-col gap-2 text-xs text-muted">
+              {endereco && <p>Retirada: {endereco}</p>}
+              {instagram && (
+                <a
+                  href={`https://instagram.com/${instagram.replace(/^@/, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-fit items-center gap-2 rounded-full border border-line px-3 py-1.5 font-medium transition hover:border-ink hover:text-ink"
+                >
+                  <InstagramIcon className="h-4 w-4" />
+                  {instagram.replace(/^@/, "")}
+                </a>
+              )}
+            </div>
+          )}
           <div className="mt-6 flex flex-col gap-4 border-t border-line pt-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
             <p>Pagamento por Pix, crédito ou débito · Retirada no local</p>
             <p>© {new Date().getFullYear()} {nomeLoja}</p>

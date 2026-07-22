@@ -164,3 +164,21 @@ export const banners = pgTable("banners", {
 
 export type Banner = typeof banners.$inferSelect;
 export type NovoBanner = typeof banners.$inferInsert;
+
+/**
+ * Identidade e contato da loja. Linha única (1 loja por deploy) — o app sempre
+ * lê/escreve o primeiro registro. O nome cadastrado substitui "Hermess" em toda
+ * a UI; ausência de registro cai no padrão do template.
+ */
+export const lojaInfo = pgTable("loja_info", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  nome: text("nome").notNull(),
+  logoUrl: text("logo_url"),
+  telefone: text("telefone"),
+  endereco: text("endereco"),
+  instagram: text("instagram"),
+  atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type LojaInfo = typeof lojaInfo.$inferSelect;
+export type NovaLojaInfo = typeof lojaInfo.$inferInsert;

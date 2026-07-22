@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed, DM_Sans } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { getLojaBrand } from "@/lib/loja";
 import "./globals.css";
 
 // Display condensada para títulos/marca; DM Sans para corpo, preço e formulários.
@@ -12,10 +13,13 @@ const display = Barlow_Condensed({
 
 const sans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
 
-export const metadata: Metadata = {
-  title: "Hermess",
-  description: "Loja online e gestão de vendas.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { nome } = await getLojaBrand();
+  return {
+    title: { default: nome, template: `%s · ${nome}` },
+    description: "Loja online e gestão de vendas.",
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#ffffff",
