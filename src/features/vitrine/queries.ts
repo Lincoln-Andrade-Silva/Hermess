@@ -1,5 +1,6 @@
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
+import { liberarReservasVencidas } from "@/features/pedidos/reserva";
 import {
   categorias,
   produtos,
@@ -85,6 +86,7 @@ function condicaoValores(valores: string[]) {
 }
 
 export async function listarVitrine(filtros: FiltrosVitrine) {
+  await liberarReservasVencidas();
   const page = Math.max(1, filtros.page ?? 1);
 
   const where = and(
