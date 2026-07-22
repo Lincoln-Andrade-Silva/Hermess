@@ -1,8 +1,8 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
-import { useState } from "react";
+import { ArrowDownUp, Check, ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import type { ValorOpcao } from "@/db/schema";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/cn";
@@ -20,6 +20,80 @@ const ORDENS = [
   { valor: "maior-preco", label: "Maior preço" },
   { valor: "nome", label: "A–Z" },
 ];
+
+/** Dropdown de ordenação estilizado — o select nativo não dá pra combinar com o tema. */
+function OrdenarSelect({
+  ordemAtual,
+  onChange,
+}: {
+  ordemAtual: string;
+  onChange: (valor: string) => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const atual = ORDENS.find((o) => o.valor === ordemAtual) ?? ORDENS[0];
+
+  useEffect(() => {
+    function onDoc(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setAberto(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setAberto(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setAberto((a) => !a)}
+        aria-haspopup="listbox"
+        aria-expanded={aberto}
+        className="flex items-center gap-2 rounded-full border border-line bg-surface py-2.5 pl-3.5 pr-3 text-sm font-medium text-ink transition hover:border-ink"
+      >
+        <ArrowDownUp className="h-4 w-4 text-muted2" />
+        <span className="whitespace-nowrap">{atual.label}</span>
+        <ChevronDown className={cn("h-4 w-4 text-muted2 transition", aberto && "rotate-180")} />
+      </button>
+
+      {aberto && (
+        <div
+          role="listbox"
+          className="absolute right-0 z-20 mt-2 w-48 overflow-hidden rounded-xl border border-line bg-bg p-1 shadow-xl"
+        >
+          {ORDENS.map((ordem) => {
+            const ativo = ordem.valor === ordemAtual;
+            return (
+              <button
+                key={ordem.valor}
+                type="button"
+                role="option"
+                aria-selected={ativo}
+                onClick={() => {
+                  onChange(ordem.valor);
+                  setAberto(false);
+                }}
+                className={cn(
+                  "flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition",
+                  ativo ? "bg-surface2 font-semibold text-ink" : "text-muted hover:bg-surface hover:text-ink",
+                )}
+              >
+                {ordem.label}
+                {ativo && <Check className="h-4 w-4 shrink-0 text-ink" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /**
  * Filtros da vitrine. Estado mora na URL, então filtro aplicado é link
@@ -140,38 +214,8 @@ export function Filtros({ grupos }: { grupos: GrupoFiltro[] }) {
           )}
         </button>
 
-        {/* Mobile: select compacto — cabe ao lado do Filtros, sem scroll. */}
-        <div className="relative ml-auto lg:hidden">
-          <select
-            value={ordemAtual}
-            onChange={(e) => trocarOrdem(e.target.value)}
-            aria-label="Ordenar"
-            className="appearance-none rounded-lg border border-line bg-surface py-2.5 pl-3 pr-9 text-sm font-medium text-ink"
-          >
-            {ORDENS.map((ordem) => (
-              <option key={ordem.valor} value={ordem.valor}>
-                {ordem.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted2" />
-        </div>
-
-        {/* Desktop: opções inline. */}
-        <div className="ml-auto hidden gap-1 lg:flex">
-          {ORDENS.map((ordem) => (
-            <button
-              key={ordem.valor}
-              type="button"
-              onClick={() => trocarOrdem(ordem.valor)}
-              className={cn(
-                "whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium transition",
-                ordemAtual === ordem.valor ? "bg-surface2 text-ink" : "text-muted hover:text-ink",
-              )}
-            >
-              {ordem.label}
-            </button>
-          ))}
+        <div className="ml-auto">
+          <OrdenarSelect ordemAtual={ordemAtual} onChange={trocarOrdem} />
         </div>
       </div>
 
