@@ -163,7 +163,7 @@ export function LojaShell({
       </header>
 
       {menuAberto && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-x-0 top-0 z-50 h-[100dvh] lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setMenuAberto(false)} aria-hidden />
           <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-bg shadow-2xl">
             <div className="flex items-center justify-between border-b border-line px-5 py-4">
@@ -185,7 +185,7 @@ export function LojaShell({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <nav className="flex flex-col p-3">
+            <nav className="flex flex-1 flex-col overflow-y-auto p-3">
               <Link
                 href="/produtos"
                 onClick={() => setMenuAberto(false)}
@@ -204,7 +204,7 @@ export function LojaShell({
                 </Link>
               ))}
             </nav>
-            <div className="mt-auto border-t border-line p-3">
+            <div className="mt-auto border-t border-line p-3 pb-[calc(env(safe-area-inset-bottom)_+_1.25rem)]">
               {profile ? (
                 <>
                   <Link
