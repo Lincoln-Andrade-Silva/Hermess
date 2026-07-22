@@ -21,16 +21,18 @@ const ORDENS = [
   { valor: "nome", label: "A–Z" },
 ];
 
-/** Dropdown de ordenação estilizado — o select nativo não dá pra combinar com o tema. */
-function OrdenarSelect({
-  ordemAtual,
-  onChange,
-}: {
-  ordemAtual: string;
-  onChange: (valor: string) => void;
-}) {
+/**
+ * Dropdown de ordenação, autossuficiente (lê e escreve a ordem na URL). Fica
+ * fora dos filtros para poder ser posicionado acima da grade no desktop.
+ */
+export function OrdenarSelect({ className }: { className?: string }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [aberto, setAberto] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  const ordemAtual = searchParams.get("ordem") ?? "recentes";
   const atual = ORDENS.find((o) => o.valor === ordemAtual) ?? ORDENS[0];
 
   useEffect(() => {
@@ -48,14 +50,24 @@ function OrdenarSelect({
     };
   }, []);
 
+  function trocar(valor: string) {
+    router.replace(
+      montarUrl(pathname, searchParams, {
+        ordem: valor === "recentes" ? null : valor,
+        page: null,
+      }),
+    );
+    setAberto(false);
+  }
+
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className={cn("relative", className)}>
       <button
         type="button"
         onClick={() => setAberto((a) => !a)}
         aria-haspopup="listbox"
         aria-expanded={aberto}
-        className="flex items-center gap-2 rounded-full border border-line bg-surface py-2.5 pl-3.5 pr-3 text-sm font-medium text-ink transition hover:border-ink"
+        className="flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-ink transition hover:bg-surface"
       >
         <ArrowDownUp className="h-4 w-4 text-muted2" />
         <span className="whitespace-nowrap">{atual.label}</span>
@@ -65,7 +77,7 @@ function OrdenarSelect({
       {aberto && (
         <div
           role="listbox"
-          className="absolute right-0 z-20 mt-2 w-48 overflow-hidden rounded-xl border border-line bg-bg p-1 shadow-xl"
+          className="absolute right-0 z-30 mt-2 w-48 overflow-hidden rounded-xl border border-line bg-bg p-1 shadow-xl"
         >
           {ORDENS.map((ordem) => {
             const ativo = ordem.valor === ordemAtual;
@@ -75,13 +87,12 @@ function OrdenarSelect({
                 type="button"
                 role="option"
                 aria-selected={ativo}
-                onClick={() => {
-                  onChange(ordem.valor);
-                  setAberto(false);
-                }}
+                onClick={() => trocar(ordem.valor)}
                 className={cn(
                   "flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition",
-                  ativo ? "bg-surface2 font-semibold text-ink" : "text-muted hover:bg-surface hover:text-ink",
+                  ativo
+                    ? "bg-surface2 font-semibold text-ink"
+                    : "text-muted hover:bg-surface hover:text-ink",
                 )}
               >
                 {ordem.label}
@@ -95,18 +106,12 @@ function OrdenarSelect({
   );
 }
 
-/**
- * Filtros da vitrine. Estado mora na URL, então filtro aplicado é link
- * compartilhável e o botão voltar do navegador funciona.
- */
-export function Filtros({ grupos }: { grupos: GrupoFiltro[] }) {
+/** Conteúdo dos filtros (eixos). Estado na URL — link compartilhável. */
+function PainelFiltros({ grupos }: { grupos: GrupoFiltro[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [aberto, setAberto] = useState(false);
-
   const selecionados = searchParams.getAll("v");
-  const ordemAtual = searchParams.get("ordem") ?? "recentes";
 
   function alternar(par: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -120,15 +125,6 @@ export function Filtros({ grupos }: { grupos: GrupoFiltro[] }) {
     router.replace(`${pathname}?${params.toString()}`);
   }
 
-  function trocarOrdem(valor: string) {
-    router.replace(
-      montarUrl(pathname, searchParams, {
-        ordem: valor === "recentes" ? null : valor,
-        page: null,
-      }),
-    );
-  }
-
   function limpar() {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("v");
@@ -136,7 +132,7 @@ export function Filtros({ grupos }: { grupos: GrupoFiltro[] }) {
     router.replace(params.toString() ? `${pathname}?${params.toString()}` : pathname);
   }
 
-  const painel = (
+  return (
     <div className="space-y-6">
       {grupos.map((grupo) => (
         <div key={grupo.nome} className="space-y-3">
@@ -196,36 +192,39 @@ export function Filtros({ grupos }: { grupos: GrupoFiltro[] }) {
       )}
     </div>
   );
+}
+
+/** Coluna de filtros — desktop. */
+export function FiltrosSidebar({ grupos }: { grupos: GrupoFiltro[] }) {
+  return <PainelFiltros grupos={grupos} />;
+}
+
+/** Botão + drawer de filtros — mobile. */
+export function FiltrosDrawer({ grupos }: { grupos: GrupoFiltro[] }) {
+  const searchParams = useSearchParams();
+  const [aberto, setAberto] = useState(false);
+  const selecionados = searchParams.getAll("v");
 
   return (
     <>
-      <div className="mb-6 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setAberto(true)}
-          className="flex shrink-0 items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-ink transition hover:bg-surface lg:hidden"
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-          Filtros
-          {selecionados.length > 0 && (
-            <span className="rounded-full bg-ink px-1.5 text-[11px] font-bold text-bg">
-              {selecionados.length}
-            </span>
-          )}
-        </button>
-
-        <div className="ml-auto">
-          <OrdenarSelect ordemAtual={ordemAtual} onChange={trocarOrdem} />
-        </div>
-      </div>
-
-      {/* Desktop: coluna fixa. Mobile: painel deslizante. */}
-      <div className="hidden lg:block">{painel}</div>
+      <button
+        type="button"
+        onClick={() => setAberto(true)}
+        className="flex shrink-0 items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-ink transition hover:bg-surface"
+      >
+        <SlidersHorizontal className="h-4 w-4" />
+        Filtros
+        {selecionados.length > 0 && (
+          <span className="rounded-full bg-ink px-1.5 text-[11px] font-bold text-bg">
+            {selecionados.length}
+          </span>
+        )}
+      </button>
 
       {aberto && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-x-0 top-0 z-50 h-[100dvh]">
           <div className="absolute inset-0 bg-black/40" onClick={() => setAberto(false)} aria-hidden />
-          <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-bg p-5">
+          <div className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-2xl bg-bg p-5">
             <div className="mb-5 flex items-center justify-between">
               <p className="font-display text-xl font-extrabold uppercase tracking-wide">Filtros</p>
               <button
@@ -237,7 +236,7 @@ export function Filtros({ grupos }: { grupos: GrupoFiltro[] }) {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            {painel}
+            <PainelFiltros grupos={grupos} />
             <Button onClick={() => setAberto(false)} className="mt-5 w-full">
               Ver resultados
             </Button>

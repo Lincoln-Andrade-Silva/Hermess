@@ -293,16 +293,16 @@ export function LojaShell({
             <div className="mt-4 flex flex-col gap-3 text-xs text-muted">
               {endereco && <p>Retirada: {endereco}</p>}
               {(instagram || telefone) && (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {instagram && (
                     <a
                       href={`https://instagram.com/${instagram.replace(/^@/, "")}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label={`Instagram @${instagram.replace(/^@/, "")}`}
-                      className="flex h-10 w-10 items-center justify-center rounded-full border border-line text-ink transition hover:border-ink hover:bg-ink hover:text-bg"
+                      className="inline-flex items-center gap-2 rounded-full border border-line px-3 py-1.5 font-medium text-ink transition hover:border-ink"
                     >
-                      <InstagramIcon className="h-5 w-5" />
+                      <InstagramIcon className="h-4 w-4" />
+                      {instagram.replace(/^@/, "")}
                     </a>
                   )}
                   {telefone && (
@@ -310,10 +310,10 @@ export function LojaShell({
                       href={linkWhatsApp(telefone)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label="WhatsApp"
-                      className="flex h-10 w-10 items-center justify-center rounded-full border border-line text-ink transition hover:border-emerald-600 hover:bg-emerald-600 hover:text-white"
+                      className="inline-flex items-center gap-2 rounded-full border border-line px-3 py-1.5 font-medium text-ink transition hover:border-emerald-600 hover:text-emerald-600"
                     >
-                      <WhatsAppIcon className="h-5 w-5" />
+                      <WhatsAppIcon className="h-4 w-4" />
+                      Fale conosco
                     </a>
                   )}
                 </div>
