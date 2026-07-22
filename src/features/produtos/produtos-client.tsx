@@ -56,7 +56,7 @@ export function ProdutosClient({
           <div className="h-14 w-11 shrink-0 overflow-hidden rounded-lg border border-line bg-surface">
             {row.original.imagemUrl && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={row.original.imagemUrl} alt="" className="h-full w-full object-cover" />
+              <img src={row.original.imagemUrl} alt="" className="h-full w-full object-cover object-top" />
             )}
           </div>
           <div className="min-w-0">
@@ -161,7 +161,7 @@ export function ProdutosClient({
             <div className="h-24 w-[72px] shrink-0 overflow-hidden rounded-lg border border-line bg-surface">
               {produto.imagemUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={produto.imagemUrl} alt="" className="h-full w-full object-cover" />
+                <img src={produto.imagemUrl} alt="" className="h-full w-full object-cover object-top" />
               )}
             </div>
 

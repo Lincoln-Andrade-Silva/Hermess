@@ -33,6 +33,7 @@ const configSchema = z.object({
     .nullable()
     .or(z.literal(""))
     .transform((v) => (v ? v : null)),
+  estoqueMinimo: z.number().int().min(0).max(9999).default(5),
 });
 
 export type ConfiguracoesInput = z.input<typeof configSchema>;

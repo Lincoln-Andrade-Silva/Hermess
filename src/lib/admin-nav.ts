@@ -46,7 +46,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
     items: [
       { label: "Produtos", href: "/admin/produtos", icon: Package, ready: true },
       { label: "Categorias", href: "/admin/categorias", icon: Tags, ready: true },
-      { label: "Estoque", href: "/admin/estoque", icon: Boxes, ready: false },
+      { label: "Estoque", href: "/admin/estoque", icon: Boxes, ready: true },
     ],
   },
   {

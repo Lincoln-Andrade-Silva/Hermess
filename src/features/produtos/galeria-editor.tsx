@@ -75,7 +75,7 @@ export function GaleriaEditor({
               )}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt="" className="aspect-[3/4] w-full object-cover" />
+              <img src={url} alt="" className="aspect-[3/4] w-full object-cover object-top" />
 
               {i === 0 && (
                 <span className="absolute left-2 top-2 rounded bg-ink px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-bg">

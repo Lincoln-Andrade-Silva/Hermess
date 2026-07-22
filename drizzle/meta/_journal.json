@@ -113,6 +113,27 @@
       "when": 1784743419548,
       "tag": "0015_email_notificacoes",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1784756634361,
+      "tag": "0016_create_estoque_movimentacoes",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1784756634500,
+      "tag": "0017_estoque_movimentacoes_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1784757499341,
+      "tag": "0018_preco_custo_e_nf",
+      "breakpoints": true
     }
   ]
 }

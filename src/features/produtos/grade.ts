@@ -10,6 +10,7 @@ export interface EixoRascunho {
 export interface VariacaoRascunho {
   sku: string;
   preco: string;
+  precoCusto: string;
   estoque: string;
   imagemUrl: string | null;
   combinacao: Combinacao;
@@ -74,6 +75,7 @@ export function sincronizarGrade(
         : {
             sku: skuSugerido([]),
             preco: "",
+            precoCusto: "",
             estoque: "0",
             imagemUrl: null,
             combinacao: {},
@@ -104,6 +106,7 @@ export function sincronizarGrade(
     return {
       sku: sugerido,
       preco: "",
+      precoCusto: "",
       estoque: "0",
       imagemUrl: null,
       combinacao,

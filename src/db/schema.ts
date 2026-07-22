@@ -124,6 +124,8 @@ export const produtosVariacoes = pgTable(
     // Preço cheio. Desconto é responsabilidade do módulo de Promoções, que
     // aplica regra e validade por cima deste valor — nunca sobrescrevendo-o.
     preco: numeric("preco", { precision: 10, scale: 2 }).notNull(),
+    // Custo de aquisição da peça — usado para acompanhar o custo no estoque.
+    precoCusto: numeric("preco_custo", { precision: 10, scale: 2 }).notNull().default("0"),
     estoque: integer("estoque").notNull().default(0),
     // Reservado no checkout e liberado na expiração (Fase 4).
     // Disponível para venda = estoque - reservado.
@@ -145,6 +147,45 @@ export const produtosVariacoes = pgTable(
 
 export type ProdutoVariacao = typeof produtosVariacoes.$inferSelect;
 export type NovaProdutoVariacao = typeof produtosVariacoes.$inferInsert;
+
+export const tipoMovimentacao = pgEnum("tipo_movimentacao", [
+  "entrada",
+  "ajuste",
+  "venda",
+  "devolucao",
+]);
+
+/**
+ * Histórico de movimentação de estoque físico. Só registra mudança real de
+ * `estoque` (não a reserva, que é volátil). `quantidade` é o delta com sinal;
+ * `estoqueResultante` é o saldo após a movimentação. `usuarioId` é nulo nas
+ * automáticas (venda/devolução vindas de pedido).
+ */
+export const estoqueMovimentacoes = pgTable(
+  "estoque_movimentacoes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    variacaoId: uuid("variacao_id")
+      .notNull()
+      .references(() => produtosVariacoes.id, { onDelete: "cascade" }),
+    tipo: tipoMovimentacao("tipo").notNull(),
+    quantidade: integer("quantidade").notNull(),
+    estoqueResultante: integer("estoque_resultante").notNull(),
+    // Custo unitário congelado no momento da movimentação (snapshot do preço de
+    // custo da variação). O custo total do lançamento = custoUnitario × |qtd|.
+    custoUnitario: numeric("custo_unitario", { precision: 10, scale: 2 }),
+    // Nota fiscal de origem, informada nas entradas (recebimento).
+    nf: text("nf"),
+    motivo: text("motivo"),
+    usuarioId: uuid("usuario_id").references(() => profiles.id, { onDelete: "set null" }),
+    criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    variacaoIdx: index("estoque_mov_variacao_idx").on(t.variacaoId, t.criadoEm),
+  }),
+);
+
+export type EstoqueMovimentacao = typeof estoqueMovimentacoes.$inferSelect;
 
 /**
  * Banners da home. Arte pronta enviada pelo lojista — o sistema não sobrepõe
@@ -181,6 +222,8 @@ export const lojaInfo = pgTable("loja_info", {
   instagram: text("instagram"),
   // Para onde a loja recebe os avisos de pedido. Nulo = não notifica a empresa.
   emailNotificacao: text("email_notificacao"),
+  // Estoque igual ou abaixo deste valor dispara o alerta de estoque baixo.
+  estoqueMinimo: integer("estoque_minimo").notNull().default(5),
   atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -48,6 +48,7 @@ export function ProdutoForm({ produto, categorias, taxaGateway }: Props) {
     produto?.variacoes.map((v) => ({
       sku: v.sku,
       preco: v.preco,
+      precoCusto: v.precoCusto,
       estoque: String(v.estoque),
       imagemUrl: v.imagemUrl,
       combinacao: v.combinacao,
@@ -82,6 +83,7 @@ export function ProdutoForm({ produto, categorias, taxaGateway }: Props) {
         variacoes: variacoes.map((v) => ({
           sku: v.sku.trim(),
           preco: v.preco || "0",
+          precoCusto: v.precoCusto || "0",
           estoque: v.estoque || "0",
           imagemUrl: v.imagemUrl,
           combinacao: v.combinacao,

@@ -114,7 +114,7 @@ A nota exibida no card é da loja, não do produto, o que infla todos para 4.9. 
 - [ ] **Fase 7**: PDV — venda de balcão lançada pelo admin
 
 **Gestão**
-- [ ] **Fase 8**: Estoque — entrada, movimentações e alerta de estoque baixo
+- [x] **Fase 8**: Estoque — listagem paginada por variação (filtros de categoria e estoque baixo), entrada e ajuste com motivo, histórico de movimentações (venda/devolução automáticas + entrada/ajuste manuais) e alerta de estoque baixo configurável
 - [ ] **Fase 9**: Dashboard — KPIs, gráficos e ranking de produtos, com filtro por período
 - [ ] **Fase 10**: Relatórios — faturamento, produtos, métodos de pagamento e estoque
 - [~] **Fase 11**: Configurações — identidade da loja (nome, logo, contato) e credenciais/taxa do Mercado Pago **feitas**; faltam janela de retirada e usuários

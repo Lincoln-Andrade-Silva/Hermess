@@ -22,6 +22,7 @@ export function ConfiguracoesClient({ info }: { info: LojaInfo | null }) {
   const [endereco, setEndereco] = useState(info?.endereco ?? "");
   const [instagram, setInstagram] = useState(info?.instagram ?? "");
   const [emailNotificacao, setEmailNotificacao] = useState(info?.emailNotificacao ?? "");
+  const [estoqueMinimo, setEstoqueMinimo] = useState(String(info?.estoqueMinimo ?? 5));
 
   function selecionarLogo(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -48,6 +49,7 @@ export function ConfiguracoesClient({ info }: { info: LojaInfo | null }) {
         endereco: endereco.trim() || null,
         instagram: instagram.trim() || null,
         emailNotificacao: emailNotificacao.trim() || null,
+        estoqueMinimo: Number(estoqueMinimo) || 0,
       });
       if (!r.ok) {
         setErro(r.erro ?? "Não foi possível salvar.");
@@ -160,6 +162,21 @@ export function ConfiguracoesClient({ info }: { info: LojaInfo | null }) {
             value={emailNotificacao}
             onChange={(e) => setEmailNotificacao(e.target.value)}
             placeholder="loja@exemplo.com"
+          />
+        </Field>
+
+        <Field
+          label="Alerta de estoque baixo"
+          htmlFor="cfg-estoque-minimo"
+          hint="(quando o estoque chega neste número)"
+        >
+          <Input
+            id="cfg-estoque-minimo"
+            type="number"
+            min={0}
+            inputMode="numeric"
+            value={estoqueMinimo}
+            onChange={(e) => setEstoqueMinimo(e.target.value)}
           />
         </Field>
 
