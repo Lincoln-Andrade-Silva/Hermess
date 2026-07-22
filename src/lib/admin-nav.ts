@@ -31,7 +31,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
     label: "Visão geral",
     items: [
       { label: "Dashboard", href: "/admin", icon: Gauge, ready: true },
-      { label: "Relatórios", href: "/admin/relatorios", icon: BarChart3, ready: false },
+      { label: "Relatórios", href: "/admin/relatorios", icon: BarChart3, ready: true },
     ],
   },
   {

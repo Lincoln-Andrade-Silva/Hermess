@@ -116,7 +116,7 @@ A nota exibida no card é da loja, não do produto, o que infla todos para 4.9. 
 **Gestão**
 - [x] **Fase 8**: Estoque — listagem paginada por variação (filtros de categoria e estoque baixo), entrada e ajuste com motivo, histórico de movimentações (venda/devolução automáticas + entrada/ajuste manuais) e alerta de estoque baixo configurável
 - [x] **Fase 9**: Dashboard — KPIs (faturamento, vendas, ticket médio, itens), gráfico de faturamento por dia, split por canal e ranking de produtos, com filtro por período (7/30/90 dias)
-- [ ] **Fase 10**: Relatórios — faturamento, produtos, métodos de pagamento e estoque
+- [x] **Fase 10**: Relatórios — faturamento por dia, produtos com margem (faturamento − custo), métodos de pagamento e valor de estoque por categoria, com filtro por período
 - [~] **Fase 11**: Configurações — identidade da loja (nome, logo, contato) e credenciais/taxa do Mercado Pago **feitas**; faltam janela de retirada e usuários
 
 **Entrega**
