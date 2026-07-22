@@ -110,7 +110,7 @@ A nota exibida no card é da loja, não do produto, o que infla todos para 4.9. 
 **Venda**
 - [x] **Fase 4**: Carrinho e checkout de retirada, com reserva de estoque — sacola client-side, checkout com login, pedido `aguardando_pagamento` reservando estoque (15 min), "Minha conta" com histórico
 - [x] **Fase 5**: Pagamento — Checkout Pro (Pix/crédito/débito), credenciais e taxa no banco, webhook com validação HMAC, reconciliação idempotente (reserva → baixa de estoque), estorno e cron de expiração; líquido por venda exibido no cadastro de produto
-- [ ] **Fase 6**: Pedidos no admin — listagem, detalhe e máquina de estados
+- [x] **Fase 6**: Pedidos no admin — listagem paginada no banco (filtros por status/período/busca), detalhe e máquina de estados de retirada (pago → separando → pronto_para_retirada → retirado); cancelamento estorna no MP e devolve o estoque, idempotente com o webhook
 - [ ] **Fase 7**: PDV — venda de balcão lançada pelo admin
 
 **Gestão**

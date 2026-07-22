@@ -23,6 +23,8 @@ interface DataTableServerProps<T> {
    * mais de duas colunas, vale sempre fornecer.
    */
   mobileCard?: (item: T) => React.ReactNode;
+  /** Torna a linha inteira clicável, navegando para o destino. */
+  rowHref?: (item: T) => string;
 }
 
 /** Listagem paginada no servidor: busca e página vivem na URL (`q`, `page`). */
@@ -36,6 +38,7 @@ export function DataTableServer<T>({
   actions,
   emptyMessage = "Nenhum registro encontrado.",
   mobileCard,
+  rowHref,
 }: DataTableServerProps<T>) {
   const router = useRouter();
   const pathname = usePathname();
@@ -75,7 +78,7 @@ export function DataTableServer<T>({
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               placeholder={searchPlaceholder}
-              className="h-11 pl-10"
+              className="h-[50px] pl-10"
             />
           </div>
           {filter}
@@ -127,7 +130,14 @@ export function DataTableServer<T>({
               </tr>
             ) : (
               rows.map((row) => (
-                <tr key={row.id} className="transition hover:bg-surface/40">
+                <tr
+                  key={row.id}
+                  onClick={rowHref ? () => router.push(rowHref(row.original)) : undefined}
+                  className={cn(
+                    "transition hover:bg-surface/40",
+                    rowHref && "cursor-pointer",
+                  )}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="px-4 py-3 align-middle">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

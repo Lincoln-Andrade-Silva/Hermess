@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { CheckCircle2 } from "lucide-react";
 import { formatBRL, formatDataHora } from "@/lib/format";
 import { Badge } from "@/components/ui";
@@ -43,10 +44,17 @@ export default async function PedidoPage({ params }: { params: { numero: string 
         </>
       )}
 
-      <div className="mt-8 space-y-3 rounded-2xl border border-line p-5">
+      <div className="mt-8 divide-y divide-line rounded-2xl border border-line">
         {pedido.itens.map((item, i) => (
-          <div key={i} className="flex items-start justify-between gap-4 text-sm">
-            <div className="min-w-0">
+          <div key={i} className="flex items-center gap-4 px-5 py-4">
+            <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-lg border border-line bg-surface">
+              {item.imagem ? (
+                <Image src={item.imagem} alt="" fill sizes="64px" className="object-cover" />
+              ) : (
+                <span className="flex h-full items-center justify-center text-xs text-muted2">—</span>
+              )}
+            </div>
+            <div className="min-w-0 flex-1 text-sm">
               <p className="font-medium text-ink">{item.nomeProduto}</p>
               <p className="text-xs text-muted">
                 {Object.values(item.combinacao).join(" · ")}
@@ -54,12 +62,12 @@ export default async function PedidoPage({ params }: { params: { numero: string 
                 {item.quantidade}x
               </p>
             </div>
-            <span className="shrink-0 font-medium text-ink">
+            <span className="shrink-0 text-sm font-medium text-ink">
               {formatBRL(Number(item.precoUnitario) * item.quantidade)}
             </span>
           </div>
         ))}
-        <div className="flex items-center justify-between border-t border-line pt-3 text-base font-semibold text-ink">
+        <div className="flex items-center justify-between px-5 py-4 text-base font-semibold text-ink">
           <span>Total</span>
           <span>{formatBRL(pedido.total)}</span>
         </div>

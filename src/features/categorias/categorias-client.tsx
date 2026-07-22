@@ -15,9 +15,16 @@ import {
   Input,
   Modal,
   PageHeader,
+  Select,
   Toggle,
 } from "@/components/ui";
 import { excluirCategoria, salvarCategoria } from "./actions";
+
+const SITUACAO_OPTIONS = [
+  { value: "todas", label: "Todas as situações" },
+  { value: "ativa", label: "Ativas" },
+  { value: "inativa", label: "Inativas" },
+];
 
 interface Rascunho {
   nome: string;
@@ -35,6 +42,11 @@ export function CategoriasClient({ categorias }: { categorias: Categoria[] }) {
   const [rascunho, setRascunho] = useState<Rascunho>(RASCUNHO_VAZIO);
   const [erro, setErro] = useState<string | null>(null);
   const [excluindo, setExcluindo] = useState<Categoria | null>(null);
+  const [situacao, setSituacao] = useState("todas");
+
+  const filtradas = categorias.filter((c) =>
+    situacao === "todas" ? true : situacao === "ativa" ? c.ativo : !c.ativo,
+  );
 
   function abrirNova() {
     setEditando(null);
@@ -139,9 +151,17 @@ export function CategoriasClient({ categorias }: { categorias: Categoria[] }) {
 
       <DataTable
         columns={colunas}
-        data={categorias}
+        data={filtradas}
         searchPlaceholder="Buscar categoria..."
         emptyMessage="Nenhuma categoria cadastrada."
+        filter={
+          <Select
+            value={situacao}
+            onChange={setSituacao}
+            options={SITUACAO_OPTIONS}
+            className="sm:w-52"
+          />
+        }
         actions={
           <Button onClick={abrirNova} className="w-full sm:w-auto">
             <Plus className="h-4 w-4" />

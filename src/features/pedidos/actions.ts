@@ -13,6 +13,7 @@ import {
 } from "@/db/schema";
 import { getCurrentProfile } from "@/lib/auth";
 import { RESERVA_MINUTOS } from "./constants";
+import { selecionarItensComImagem, type ItemComImagem } from "./itens";
 import { liberarReservasVencidas } from "./reserva";
 
 const itemSchema = z.object({
@@ -152,13 +153,7 @@ export interface PedidoComItens {
   total: string;
   expiraEm: Date;
   criadoEm: Date;
-  itens: {
-    nomeProduto: string;
-    sku: string;
-    combinacao: Combinacao;
-    precoUnitario: string;
-    quantidade: number;
-  }[];
+  itens: ItemComImagem[];
 }
 
 /** Pedido do cliente logado por número. Nulo se não existe ou não é dele. */
@@ -172,16 +167,7 @@ export async function buscarMeuPedido(numero: number): Promise<PedidoComItens | 
     .where(and(eq(pedidos.numero, numero), eq(pedidos.clienteId, profile.id)));
   if (!pedido) return null;
 
-  const itens = await db
-    .select({
-      nomeProduto: pedidoItens.nomeProduto,
-      sku: pedidoItens.sku,
-      combinacao: pedidoItens.combinacao,
-      precoUnitario: pedidoItens.precoUnitario,
-      quantidade: pedidoItens.quantidade,
-    })
-    .from(pedidoItens)
-    .where(eq(pedidoItens.pedidoId, pedido.id));
+  const itens = await selecionarItensComImagem(pedido.id);
 
   return {
     numero: pedido.numero,

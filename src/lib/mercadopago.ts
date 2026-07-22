@@ -69,6 +69,24 @@ export async function getPagamento(id: string): Promise<Pagamento> {
   return data;
 }
 
+/** Estorna (total) um pagamento aprovado. Idempotente pela chave enviada. */
+export async function estornarPagamento(paymentId: string): Promise<void> {
+  const token = await accessToken();
+  const res = await fetch(`${API}/v1/payments/${paymentId}/refunds`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "X-Idempotency-Key": `refund-${paymentId}`,
+    },
+    body: "{}",
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(`MP refund: ${JSON.stringify(data)}`);
+  }
+}
+
 /** Situação do pagamento traduzida para o domínio do pedido. */
 export function situacaoPagamento(status: string): "aprovado" | "estornado" | "pendente" {
   if (status === "approved") return "aprovado";
