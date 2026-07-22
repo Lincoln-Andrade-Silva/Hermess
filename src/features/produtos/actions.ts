@@ -123,6 +123,7 @@ export interface ProdutoCompleto {
   variacoes: {
     sku: string;
     preco: string;
+    precoCusto: string;
     estoque: number;
     imagemUrl: string | null;
     combinacao: Combinacao;
@@ -172,6 +173,7 @@ export async function buscarProduto(id: string): Promise<ProdutoCompleto | null>
     variacoes: variacoes.map((v) => ({
       sku: v.sku,
       preco: v.preco,
+      precoCusto: v.precoCusto,
       estoque: v.estoque,
       imagemUrl: v.imagemUrl,
       combinacao: v.combinacao,
@@ -216,6 +218,7 @@ const produtoSchema = z.object({
       z.object({
         sku: z.string().trim().min(1, "SKU vazio."),
         preco: z.coerce.number().nonnegative("Preço inválido."),
+        precoCusto: z.coerce.number().nonnegative("Custo inválido.").default(0),
         estoque: z.coerce.number().int().min(0, "Estoque inválido."),
         imagemUrl: z.string().url().nullable().default(null),
         combinacao: z.record(z.string(), z.string()),
@@ -320,6 +323,7 @@ export async function salvarProduto(
           produtoId: alvo!,
           sku: v.sku,
           preco: v.preco.toFixed(2),
+          precoCusto: v.precoCusto.toFixed(2),
           estoque: v.estoque,
           imagemUrl: v.imagemUrl,
           combinacao: v.combinacao,
@@ -435,6 +439,7 @@ export async function clonarProduto(id: string): Promise<ResultadoAcao & { id?: 
             produtoId: criado.id,
             sku: variacao.sku,
             preco: variacao.preco,
+            precoCusto: variacao.precoCusto,
             // Estoque não se duplica: a cópia é outro produto e começa zerada.
             estoque: 0,
             imagemUrl: variacao.imagemUrl,

@@ -36,6 +36,14 @@ export async function aplicarCancelamento(
         from "pedido_itens" as i
         where i.variacao_id = v.id and i.pedido_id = ${pedidoId}
       `);
+      // Registra a devolução no histórico de estoque.
+      await tx.execute(sql`
+        insert into "estoque_movimentacoes" (variacao_id, tipo, quantidade, estoque_resultante, custo_unitario)
+        select i.variacao_id, 'devolucao', i.quantidade, v.estoque, v.preco_custo
+        from "pedido_itens" as i
+        join "produtos_variacoes" as v on v.id = i.variacao_id
+        where i.pedido_id = ${pedidoId}
+      `);
       return true;
     }
 
@@ -91,6 +99,14 @@ export async function reconciliarPagamentoPedido(paymentId: string): Promise<voi
               reservado = greatest(0, v.reservado - i.quantidade)
           from "pedido_itens" as i
           where i.variacao_id = v.id and i.pedido_id = ${pedidoId}
+        `);
+        // Registra a venda no histórico de estoque.
+        await tx.execute(sql`
+          insert into "estoque_movimentacoes" (variacao_id, tipo, quantidade, estoque_resultante, custo_unitario)
+          select i.variacao_id, 'venda', -i.quantidade, v.estoque, v.preco_custo
+          from "pedido_itens" as i
+          join "produtos_variacoes" as v on v.id = i.variacao_id
+          where i.pedido_id = ${pedidoId}
         `);
         return true;
       }

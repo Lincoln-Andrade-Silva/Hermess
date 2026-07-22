@@ -22,6 +22,7 @@ export function VariacoesGrade({
   onChange: (variacoes: VariacaoRascunho[]) => void;
   taxaGateway: number;
 }) {
+  const [massaCusto, setMassaCusto] = useState("");
   const [massaPreco, setMassaPreco] = useState("");
   const [massaEstoque, setMassaEstoque] = useState("");
 
@@ -43,17 +44,20 @@ export function VariacoesGrade({
   }
 
   function aplicarEmMassa() {
+    const custo = massaCusto.trim();
     const preco = massaPreco.trim();
     const estoque = massaEstoque.trim();
-    if (!preco && !estoque) return;
+    if (!custo && !preco && !estoque) return;
 
     onChange(
       variacoes.map((v) => ({
         ...v,
+        precoCusto: custo || v.precoCusto,
         preco: preco || v.preco,
         estoque: estoque || v.estoque,
       })),
     );
+    setMassaCusto("");
     setMassaPreco("");
     setMassaEstoque("");
   }
@@ -84,6 +88,21 @@ export function VariacoesGrade({
                 type="number"
                 min={0}
                 step="0.01"
+                value={massaCusto}
+                onChange={(e) => setMassaCusto(e.target.value)}
+                placeholder="custo"
+                aria-label="Preço de custo para todas as variações"
+                className="h-9 pl-8 pr-2 text-sm"
+              />
+            </div>
+            <div className="relative w-28 shrink-0">
+              <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted2">
+                R$
+              </span>
+              <Input
+                type="number"
+                min={0}
+                step="0.01"
                 value={massaPreco}
                 onChange={(e) => setMassaPreco(e.target.value)}
                 placeholder="preço"
@@ -104,7 +123,7 @@ export function VariacoesGrade({
               size="sm"
               variant="secondary"
               onClick={aplicarEmMassa}
-              disabled={!massaPreco.trim() && !massaEstoque.trim()}
+              disabled={!massaCusto.trim() && !massaPreco.trim() && !massaEstoque.trim()}
               className="h-9 shrink-0"
             >
               <Wand2 className="h-4 w-4" />
@@ -150,6 +169,24 @@ export function VariacoesGrade({
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`m-custo-${i}`}>Custo</Label>
+                    <div className="relative">
+                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted2">
+                        R$
+                      </span>
+                      <Input
+                        id={`m-custo-${i}`}
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        step="0.01"
+                        value={variacao.precoCusto}
+                        onChange={(e) => atualizar(i, { precoCusto: e.target.value })}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
                   <div className="space-y-1.5">
                     <Label htmlFor={`m-preco-${i}`}>Preço</Label>
                     <div className="relative">
@@ -212,6 +249,9 @@ export function VariacoesGrade({
                   SKU
                 </th>
                 <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-muted2">
+                  Custo
+                </th>
+                <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-muted2">
                   Preço
                 </th>
                 <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-muted2">
@@ -261,6 +301,23 @@ export function VariacoesGrade({
                         aria-label="SKU"
                         className="h-9 w-36 px-2.5 font-mono text-xs"
                       />
+                    </td>
+
+                    <td className="px-4 py-2.5">
+                      <div className="relative w-28">
+                        <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted2">
+                          R$
+                        </span>
+                        <Input
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          value={variacao.precoCusto}
+                          onChange={(e) => atualizar(i, { precoCusto: e.target.value })}
+                          aria-label="Preço de custo"
+                          className="h-9 pl-8 pr-2 text-sm"
+                        />
+                      </div>
                     </td>
 
                     <td className="px-4 py-2.5">
