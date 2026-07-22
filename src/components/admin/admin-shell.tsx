@@ -31,7 +31,7 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
-    <nav className="flex-1 space-y-5 px-3 py-4">
+    <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
       {ADMIN_NAV.map((section) => (
         <div key={section.label} className="space-y-1">
           <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted2">
@@ -83,7 +83,7 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
 
 function UserFooter({ nome }: { nome: string }) {
   return (
-    <div className="mt-auto border-t border-line p-4">
+    <div className="mt-auto border-t border-line p-4 pb-[calc(env(safe-area-inset-bottom)_+_1rem)]">
       <div className="flex items-center gap-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand text-sm font-bold text-white">
           {nome.charAt(0).toUpperCase()}
@@ -154,7 +154,7 @@ export function AdminShell({
 
       {/* Drawer (mobile) */}
       {open && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-x-0 top-0 z-50 h-[100dvh] lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} aria-hidden />
           <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-panel shadow-2xl">
             <div className="flex items-center justify-between border-b border-line pr-2">

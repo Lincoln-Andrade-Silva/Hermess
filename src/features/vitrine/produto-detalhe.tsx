@@ -56,7 +56,7 @@ export function ProdutoDetalhe({ produto }: { produto: ProdutoDetalhe }) {
   return (
     <div className="grid gap-8 lg:grid-cols-2">
       {/* Galeria */}
-      <div className="space-y-3">
+      <div className="min-w-0 space-y-3">
         <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-surface">
           {galeria[imagemAtiva] ? (
             <Image
@@ -95,14 +95,14 @@ export function ProdutoDetalhe({ produto }: { produto: ProdutoDetalhe }) {
       </div>
 
       {/* Informações e seleção */}
-      <div className="lg:py-2">
+      <div className="min-w-0 lg:py-2">
         {produto.categoriaNome && (
           <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted">
             {produto.categoriaNome}
           </p>
         )}
 
-        <h1 className="font-display text-3xl font-extrabold uppercase leading-none tracking-wide text-ink sm:text-4xl">
+        <h1 className="font-display text-3xl font-extrabold uppercase leading-none tracking-wide text-ink [overflow-wrap:anywhere] sm:text-4xl">
           {produto.nome}
         </h1>
 
