@@ -38,7 +38,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
     label: "Operação",
     items: [
       { label: "Pedidos", href: "/admin/pedidos", icon: Receipt, ready: true },
-      { label: "PDV", href: "/admin/pdv", icon: ShoppingCart, ready: false },
+      { label: "PDV", href: "/admin/pdv", icon: ShoppingCart, ready: true },
     ],
   },
   {

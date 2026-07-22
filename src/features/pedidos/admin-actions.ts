@@ -22,6 +22,7 @@ export interface ResultadoAcao {
 export interface PedidoLinha {
   numero: number;
   status: StatusPedido;
+  canal: Pedido["canal"];
   nome: string;
   telefone: string;
   total: string;
@@ -65,6 +66,7 @@ export async function listarPedidosAdmin(params: {
       .select({
         numero: pedidos.numero,
         status: pedidos.status,
+        canal: pedidos.canal,
         nome: pedidos.nome,
         telefone: pedidos.telefone,
         total: pedidos.total,
@@ -87,6 +89,8 @@ export async function listarPedidosAdmin(params: {
 export interface PedidoAdminDetalhe {
   numero: number;
   status: StatusPedido;
+  canal: Pedido["canal"];
+  metodoPagamento: string | null;
   nome: string;
   telefone: string;
   total: string;
@@ -108,6 +112,8 @@ export async function buscarPedidoAdmin(numero: number): Promise<PedidoAdminDeta
   return {
     numero: pedido.numero,
     status: pedido.status,
+    canal: pedido.canal,
+    metodoPagamento: pedido.metodoPagamento,
     nome: pedido.nome,
     telefone: pedido.telefone,
     total: pedido.total,
