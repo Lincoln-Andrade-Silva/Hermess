@@ -20,6 +20,7 @@ export default async function LojaLayout({ children }: { children: React.ReactNo
         logoUrl={info?.logoUrl ?? null}
         endereco={info?.endereco ?? null}
         instagram={info?.instagram ?? null}
+        telefone={info?.telefone ?? null}
         categorias={categorias}
         profile={profile ? { nome: profile.nome, tipo: profile.tipo } : null}
       >

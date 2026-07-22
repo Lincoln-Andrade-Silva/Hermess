@@ -125,11 +125,11 @@ export function Filtros({ grupos }: { grupos: GrupoFiltro[] }) {
 
   return (
     <>
-      <div className="mb-6 flex items-center justify-between gap-3">
+      <div className="mb-6 flex items-center gap-2">
         <button
           type="button"
           onClick={() => setAberto(true)}
-          className="flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-ink transition hover:bg-surface lg:hidden"
+          className="flex shrink-0 items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-ink transition hover:bg-surface lg:hidden"
         >
           <SlidersHorizontal className="h-4 w-4" />
           Filtros
@@ -140,14 +140,15 @@ export function Filtros({ grupos }: { grupos: GrupoFiltro[] }) {
           )}
         </button>
 
-        <div className="ml-auto flex flex-wrap gap-1">
+        {/* Ordenação inline: rola na horizontal no mobile em vez de quebrar linha. */}
+        <div className="flex flex-1 gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] lg:ml-auto lg:flex-none [&::-webkit-scrollbar]:hidden">
           {ORDENS.map((ordem) => (
             <button
               key={ordem.valor}
               type="button"
               onClick={() => trocarOrdem(ordem.valor)}
               className={cn(
-                "rounded-lg px-3 py-2 text-xs font-medium transition",
+                "shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium transition",
                 ordemAtual === ordem.valor ? "bg-surface2 text-ink" : "text-muted hover:text-ink",
               )}
             >

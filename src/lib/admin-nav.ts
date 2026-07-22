@@ -1,6 +1,7 @@
 import {
   BarChart3,
   Boxes,
+  CreditCard,
   Gauge,
   Image,
   Package,
@@ -52,6 +53,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
     label: "Sistema",
     items: [
       { label: "Aparência", href: "/admin/aparencia", icon: Image, ready: true },
+      { label: "Pagamento", href: "/admin/pagamento", icon: CreditCard, ready: true },
       { label: "Configurações", href: "/admin/configuracoes", icon: Settings, ready: true },
     ],
   },

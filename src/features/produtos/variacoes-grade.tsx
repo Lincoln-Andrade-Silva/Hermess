@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Layers, Wand2 } from "lucide-react";
 import { Button, Input, Label, Toggle } from "@/components/ui";
 import { cn } from "@/lib/cn";
+import { formatBRL } from "@/lib/format";
 import type { EixoRascunho, VariacaoRascunho } from "./grade";
 
 /**
@@ -14,10 +15,12 @@ export function VariacoesGrade({
   eixos,
   variacoes,
   onChange,
+  taxaGateway,
 }: {
   eixos: EixoRascunho[];
   variacoes: VariacaoRascunho[];
   onChange: (variacoes: VariacaoRascunho[]) => void;
+  taxaGateway: number;
 }) {
   const [massaPreco, setMassaPreco] = useState("");
   const [massaEstoque, setMassaEstoque] = useState("");
@@ -325,7 +328,38 @@ export function VariacoesGrade({
           alerta={esgotadas > 0}
         />
       </div>
+
+      <NotaLiquido variacoes={variacoes} taxaGateway={taxaGateway} />
     </div>
+  );
+}
+
+/** Quanto o lojista recebe por venda, já descontada a taxa do gateway. */
+function NotaLiquido({
+  variacoes,
+  taxaGateway,
+}: {
+  variacoes: VariacaoRascunho[];
+  taxaGateway: number;
+}) {
+  if (taxaGateway <= 0) return null;
+
+  const precos = variacoes
+    .map((v) => Number(v.preco))
+    .filter((p) => Number.isFinite(p) && p > 0);
+  if (precos.length === 0) return null;
+
+  const fator = 1 - taxaGateway / 100;
+  const menor = Math.min(...precos) * fator;
+  const maior = Math.max(...precos) * fator;
+  const taxaFmt = taxaGateway.toString().replace(".", ",");
+  const faixa = menor === maior ? formatBRL(menor) : `${formatBRL(menor)}–${formatBRL(maior)}`;
+
+  return (
+    <p className="rounded-xl border border-emerald-600/20 bg-emerald-50 px-4 py-3 text-xs text-emerald-800">
+      Com a taxa de {taxaFmt}% do Mercado Pago, você recebe{" "}
+      <span className="font-semibold">{faixa}</span> por venda online. No balcão, o valor é integral.
+    </p>
   );
 }
 
