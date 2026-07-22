@@ -79,7 +79,6 @@ export function AparenciaClient({ banners }: { banners: Banner[] }) {
                   )}
                   {banner.imagemMobileUrl && <Badge tone="brand">Tem versão mobile</Badge>}
                 </div>
-                {banner.link && <p className="mt-1 truncate text-xs text-muted">→ {banner.link}</p>}
               </div>
 
               <div className="flex items-center gap-1">

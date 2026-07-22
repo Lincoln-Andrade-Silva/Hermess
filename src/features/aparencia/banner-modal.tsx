@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { ImagePlus, Trash2 } from "lucide-react";
 import type { Banner } from "@/db/schema";
-import { Button, Field, FormError, Input, Modal, Toggle } from "@/components/ui";
+import { Button, Field, FormError, Modal, Toggle } from "@/components/ui";
 import { enviarBanner, salvarBanner } from "./actions";
 
 interface Props {
@@ -88,8 +88,6 @@ export function BannerModal({ banner, open, onClose, onSalvo }: Props) {
   const [erro, setErro] = useState<string | null>(null);
   const [imagemUrl, setImagemUrl] = useState<string | null>(banner?.imagemUrl ?? null);
   const [imagemMobileUrl, setImagemMobileUrl] = useState<string | null>(banner?.imagemMobileUrl ?? null);
-  const [link, setLink] = useState(banner?.link ?? "");
-  const [alt, setAlt] = useState(banner?.alt ?? "");
   const [ativo, setAtivo] = useState(banner?.ativo ?? true);
 
   function salvar() {
@@ -102,8 +100,8 @@ export function BannerModal({ banner, open, onClose, onSalvo }: Props) {
       const r = await salvarBanner(banner?.id ?? null, {
         imagemUrl,
         imagemMobileUrl,
-        link: link.trim() || null,
-        alt: alt.trim() || null,
+        link: null,
+        alt: null,
         ativo,
       });
       if (!r.ok) {
@@ -138,24 +136,6 @@ export function BannerModal({ banner, open, onClose, onSalvo }: Props) {
           Sem a versão de celular, a de desktop é usada nos dois — e num banner largo isso costuma
           cortar demais no telefone.
         </p>
-
-        <Field label="Link ao clicar" htmlFor="banner-link" hint="(opcional)">
-          <Input
-            id="banner-link"
-            value={link}
-            onChange={(e) => setLink(e.target.value)}
-            placeholder="/categoria/camisetas ou https://..."
-          />
-        </Field>
-
-        <Field label="Descrição da imagem" htmlFor="banner-alt" hint="(acessibilidade e SEO)">
-          <Input
-            id="banner-alt"
-            value={alt}
-            onChange={(e) => setAlt(e.target.value)}
-            placeholder="Coleção de inverno"
-          />
-        </Field>
 
         <div className="flex items-center justify-between rounded-xl border border-line px-4 py-3">
           <div>
