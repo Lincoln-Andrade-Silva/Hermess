@@ -116,7 +116,7 @@ export function BannerModal({ banner, open, onClose, onSalvo }: Props) {
     <Modal open={open} onClose={onClose} title={banner ? "Editar banner" : "Novo banner"} className="max-w-2xl">
       <div className="space-y-5">
         <CampoImagem
-          label="Imagem — desktop"
+          label="Imagem - desktop"
           hint="(ideal 1920×720)"
           valor={imagemUrl}
           onChange={setImagemUrl}
@@ -125,7 +125,7 @@ export function BannerModal({ banner, open, onClose, onSalvo }: Props) {
         />
 
         <CampoImagem
-          label="Imagem — celular"
+          label="Imagem - celular"
           hint="(opcional, ideal 1080×1350)"
           valor={imagemMobileUrl}
           onChange={setImagemMobileUrl}
@@ -133,7 +133,7 @@ export function BannerModal({ banner, open, onClose, onSalvo }: Props) {
           proporcao="1080 / 1350"
         />
         <p className="-mt-3 text-xs text-muted">
-          Sem a versão de celular, a de desktop é usada nos dois — e num banner largo isso costuma
+          Sem a versão de celular, a de desktop é usada nos dois - e num banner largo isso costuma
           cortar demais no telefone.
         </p>
 

@@ -52,7 +52,7 @@ export default async function PedidoPage({ params }: { params: { numero: string 
                 {item.imagem ? (
                   <Image src={item.imagem} alt="" fill sizes="64px" className="object-cover object-top" />
                 ) : (
-                  <span className="flex h-full items-center justify-center text-xs text-muted2">—</span>
+                  <span className="flex h-full items-center justify-center text-xs text-muted2">-</span>
                 )}
               </div>
               <div className="min-w-0 flex-1 text-sm">

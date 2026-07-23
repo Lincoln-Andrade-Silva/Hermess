@@ -48,7 +48,7 @@ const temSaldo = sql`exists (
 
 interface FiltrosVitrine {
   categoria?: string;
-  /** Pares "Eixo:Valor" — ex: ["Cor:Preto", "Tamanho:P"]. */
+  /** Pares "Eixo:Valor" - ex: ["Cor:Preto", "Tamanho:P"]. */
   valores?: string[];
   ordem?: "recentes" | "menor-preco" | "maior-preco" | "nome";
   page?: number;
@@ -58,7 +58,7 @@ interface FiltrosVitrine {
  * Um único EXISTS que casa a seleção inteira numa mesma variação com saldo.
  * Dentro de um eixo os valores são OR ("Preto ou Branco"); entre eixos é AND
  * ("...e tamanho M"). Filtrar Preto+M não pode trazer a peça que só tem Preto
- * no P e M no Branco — o cliente clicaria e não acharia o que pediu.
+ * no P e M no Branco - o cliente clicaria e não acharia o que pediu.
  */
 function condicaoValores(valores: string[]) {
   if (valores.length === 0) return undefined;
@@ -262,7 +262,7 @@ export async function buscarProdutoPorSlug(slug: string): Promise<ProdutoDetalhe
   };
 }
 
-/** Categorias com produto ativo — as vazias não aparecem no menu da loja. */
+/** Categorias com produto ativo - as vazias não aparecem no menu da loja. */
 export async function listarCategoriasComProduto() {
   return db
     .selectDistinct({ nome: categorias.nome, slug: categorias.slug, ordem: categorias.ordem })

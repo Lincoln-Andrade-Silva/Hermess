@@ -6,7 +6,7 @@ import { TabBar, type TabItem } from "./tab-bar";
 
 /**
  * Trocar de aba reseta paginação e busca, mais os filtros que a tela declarar
- * em `resetParams` (cada listagem tem os seus — categoria, cor, status...).
+ * em `resetParams` (cada listagem tem os seus - categoria, cor, status...).
  */
 export function UrlTabBar({
   tabs,

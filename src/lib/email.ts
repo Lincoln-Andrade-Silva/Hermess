@@ -27,7 +27,7 @@ export function emailConfigurado(): boolean {
 
 /**
  * Envia um e-mail. No-op silencioso se o SMTP não estiver configurado e nunca
- * lança — notificação nenhuma pode derrubar o checkout ou a reconciliação.
+ * lança - notificação nenhuma pode derrubar o checkout ou a reconciliação.
  */
 export async function enviarEmail(params: {
   to: string;

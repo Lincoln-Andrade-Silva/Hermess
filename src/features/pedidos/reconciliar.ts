@@ -4,7 +4,7 @@ import { pedidos } from "@/db/schema";
 import { getPagamento, situacaoPagamento } from "@/lib/mercadopago";
 import { emailPedidoCancelado, emailPedidoPago } from "./emails";
 
-/** Estados em que o estoque já foi baixado — cancelar devolve ao estoque. */
+/** Estados em que o estoque já foi baixado - cancelar devolve ao estoque. */
 const STATUS_PAGOS = ["pago", "separando", "pronto_para_retirada"] as const;
 
 /**

@@ -10,7 +10,7 @@ const config: Config = {
     extend: {
       colors: {
         // Tokens semânticos: trocar a paleta aqui reveste o sistema inteiro,
-        // sem tocar em componente. Base clara e quase acromática — em loja de
+        // sem tocar em componente. Base clara e quase acromática - em loja de
         // roupa quem dá a cor é a foto do produto, não a interface.
         bg: "#ffffff",
         panel: "#ffffff",
@@ -19,7 +19,7 @@ const config: Config = {
         line: "#e5e5e5",
         line2: "#d4d4d4",
         ink: "#0a0a0a",
-        // Contrastes sobre #fff: muted 8.1:1, muted2 4.7:1 — ambos passam AA
+        // Contrastes sobre #fff: muted 8.1:1, muted2 4.7:1 - ambos passam AA
         // em texto pequeno, que é onde eles são usados (labels, placeholders).
         muted: "#525252",
         muted2: "#737373",

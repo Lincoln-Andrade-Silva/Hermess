@@ -15,7 +15,7 @@ import type { ProdutoDetalhe } from "./queries";
  *
  * - Cada eixo tem um valor selecionado; a variação é a combinação dos três.
  * - Selecionar uma cor troca a galeria quando aquela variação tem imagem
- *   própria — o que faz o swatch parecer "vestir" a peça.
+ *   própria - o que faz o swatch parecer "vestir" a peça.
  * - Valor sem nenhuma variação disponível aparece riscado, não some: comunica
  *   que a peça existe naquele tamanho, só está sem saldo.
  */
@@ -258,7 +258,7 @@ export function ProdutoDetalhe({ produto }: { produto: ProdutoDetalhe }) {
                     <tr key={i}>
                       {produto.fichaTecnica!.colunas.map((_, c) => (
                         <td key={c} className="whitespace-nowrap px-4 py-2.5 text-ink">
-                          {linha[c] ?? "—"}
+                          {linha[c] ?? "-"}
                         </td>
                       ))}
                     </tr>

@@ -147,12 +147,12 @@ export async function avancarStatus(numero: number): Promise<ResultadoAcao> {
   return { ok: true };
 }
 
-/** Status com pagamento/estoque ativo — exigem cancelamento antes de excluir. */
+/** Status com pagamento/estoque ativo - exigem cancelamento antes de excluir. */
 const NAO_EXCLUIVEIS: StatusPedido[] = ["pago", "separando", "pronto_para_retirada"];
 
 /**
  * Exclui o pedido em definitivo (cascade nos itens). Pedido `aguardando` tem a
- * reserva liberada antes. Pedido com pagamento ativo não é excluível — precisa
+ * reserva liberada antes. Pedido com pagamento ativo não é excluível - precisa
  * ser cancelado antes (para estornar), evitando apagar dinheiro sem estorno.
  */
 export async function excluirPedido(numero: number): Promise<ResultadoAcao> {
@@ -161,7 +161,7 @@ export async function excluirPedido(numero: number): Promise<ResultadoAcao> {
   const [pedido] = await db.select().from(pedidos).where(eq(pedidos.numero, numero));
   if (!pedido) return { ok: false, erro: "Pedido não encontrado." };
   if (NAO_EXCLUIVEIS.includes(pedido.status)) {
-    return { ok: false, erro: "Cancele o pedido antes de excluir — há pagamento envolvido." };
+    return { ok: false, erro: "Cancele o pedido antes de excluir - há pagamento envolvido." };
   }
 
   await db.transaction(async (tx) => {

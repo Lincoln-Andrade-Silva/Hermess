@@ -57,7 +57,7 @@ export function PagamentoForm({ config }: { config: PagamentoConfig | null }) {
           <Toggle on={ativo} onClick={() => setAtivo(!ativo)} />
         </div>
 
-        <Field label="Access Token" htmlFor="pg-token" hint="(secreto — produção ou teste)">
+        <Field label="Access Token" htmlFor="pg-token" hint="(secreto - produção ou teste)">
           <Input
             id="pg-token"
             value={accessToken}
@@ -86,7 +86,7 @@ export function PagamentoForm({ config }: { config: PagamentoConfig | null }) {
           />
         </Field>
 
-        <Field label="URL do site" htmlFor="pg-site" hint="(opcional — usada no retorno/webhook)">
+        <Field label="URL do site" htmlFor="pg-site" hint="(opcional - usada no retorno/webhook)">
           <Input
             id="pg-site"
             value={siteUrl}
@@ -106,7 +106,7 @@ export function PagamentoForm({ config }: { config: PagamentoConfig | null }) {
         </Field>
         <p className="-mt-3 text-xs text-muted">
           Percentual retido por venda. O valor exato depende do meio (Pix costuma ser menor que
-          cartão) e do prazo de recebimento — confira em Seu negócio → Taxas no painel do Mercado
+          cartão) e do prazo de recebimento - confira em Seu negócio → Taxas no painel do Mercado
           Pago.
         </p>
 

@@ -157,7 +157,7 @@ export function VariacoesGrade({
                               className="h-3 w-3 rounded-full border border-line2"
                             />
                           )}
-                          {valor ?? "—"}
+                          {valor ?? "-"}
                         </span>
                       );
                     })}
@@ -288,7 +288,7 @@ export function VariacoesGrade({
                                 className="h-4 w-4 shrink-0 rounded-full border border-line2"
                               />
                             )}
-                            {valor ?? "—"}
+                            {valor ?? "-"}
                           </span>
                         </td>
                       );
@@ -410,7 +410,7 @@ function NotaLiquido({
   const menor = Math.min(...precos) * fator;
   const maior = Math.max(...precos) * fator;
   const taxaFmt = taxaGateway.toString().replace(".", ",");
-  const faixa = menor === maior ? formatBRL(menor) : `${formatBRL(menor)}–${formatBRL(maior)}`;
+  const faixa = menor === maior ? formatBRL(menor) : `${formatBRL(menor)} a ${formatBRL(maior)}`;
 
   return (
     <p className="rounded-xl border border-emerald-600/20 bg-emerald-50 px-4 py-3 text-xs text-emerald-800">

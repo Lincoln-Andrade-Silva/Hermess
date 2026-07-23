@@ -2,12 +2,12 @@ import { sql } from "drizzle-orm";
 import { db } from "@/db";
 import { pedidoItens, pedidos, produtosVariacoes } from "@/db/schema";
 
-/** Aceita tanto o `db` quanto uma transação — ambos expõem `execute`. */
+/** Aceita tanto o `db` quanto uma transação - ambos expõem `execute`. */
 type Executor = Pick<typeof db, "execute">;
 
 /**
  * Varredura preguiçosa: devolve ao estoque a reserva de pedidos vencidos ainda
- * `aguardando_pagamento` e os marca `expirado`. Sem cron — roda no checkout e
+ * `aguardando_pagamento` e os marca `expirado`. Sem cron - roda no checkout e
  * nas leituras de estoque sensíveis. É barata quando nada venceu (índice em
  * status + expira_em). Idempotente.
  */

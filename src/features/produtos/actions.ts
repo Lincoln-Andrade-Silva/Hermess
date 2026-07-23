@@ -44,7 +44,7 @@ export interface ListaProdutos {
 
 /**
  * Listagem paginada no servidor. Os agregados de variação (contagem, estoque e
- * faixa de preço) saem em subselects para manter uma linha por produto — sem
+ * faixa de preço) saem em subselects para manter uma linha por produto - sem
  * eles a mesma peça apareceria repetida por variação, que é o defeito das
  * vitrines que analisamos.
  */
@@ -381,7 +381,7 @@ export async function excluirProduto(id: string): Promise<ResultadoAcao> {
  *
  * A cópia nasce inativa: quase sempre o motivo de clonar é criar uma variação
  * do modelo, e publicar na vitrine um duplicado exato do original seria pior
- * que não clonar. As imagens são reaproveitadas por URL — não há cópia no
+ * que não clonar. As imagens são reaproveitadas por URL - não há cópia no
  * bucket, então excluir a cópia não pode remover arquivo (ver excluirProduto).
  */
 export async function clonarProduto(id: string): Promise<ResultadoAcao & { id?: string }> {

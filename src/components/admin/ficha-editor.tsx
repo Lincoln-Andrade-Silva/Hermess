@@ -7,7 +7,7 @@ import { Button, Input, Label } from "@/components/ui";
 /**
  * Editor de uma tabela livre de especificações. Não assume domínio: o título,
  * os nomes das colunas e o conteúdo são todos do lojista. A primeira coluna
- * funciona como rótulo da linha, mas é só uma convenção de leitura — nada no
+ * funciona como rótulo da linha, mas é só uma convenção de leitura - nada no
  * código depende do que está escrito nela.
  */
 export function FichaEditor({
@@ -132,7 +132,7 @@ export function FichaEditor({
                     <Input
                       value={linha[c] ?? ""}
                       onChange={(e) => atualizarCelula(i, c, e.target.value)}
-                      placeholder="—"
+                      placeholder="-"
                       className="h-9 px-2 py-1 text-sm"
                     />
                   </td>

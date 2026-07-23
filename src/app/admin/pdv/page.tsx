@@ -11,7 +11,7 @@ export default async function PdvPage() {
 
   return (
     <>
-      <PageHeader title="PDV" description="Venda de balcão — baixa o estoque na hora." />
+      <PageHeader title="PDV" description="Venda de balcão - baixa o estoque na hora." />
       <PdvClient
         categorias={categorias.filter((c) => c.ativo).map((c) => ({ value: c.slug, label: c.nome }))}
       />

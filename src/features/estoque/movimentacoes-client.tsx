@@ -161,21 +161,21 @@ const columns: ColumnDef<LinhaMovimentacao>[] = [
       return total !== null ? (
         <span className="whitespace-nowrap tabular-nums text-ink">{formatBRL(total)}</span>
       ) : (
-        <span className="text-muted2">—</span>
+        <span className="text-muted2">-</span>
       );
     },
   },
   {
     accessorKey: "nf",
     header: "NF",
-    cell: ({ row }) => <span className="text-muted">{row.original.nf ?? "—"}</span>,
+    cell: ({ row }) => <span className="text-muted">{row.original.nf ?? "-"}</span>,
   },
   {
     accessorKey: "motivo",
     header: "Motivo",
     cell: ({ row }) => (
       <span className="text-muted">
-        {row.original.motivo ?? (row.original.usuarioNome ? "—" : "automático")}
+        {row.original.motivo ?? (row.original.usuarioNome ? "-" : "automático")}
       </span>
     ),
   },

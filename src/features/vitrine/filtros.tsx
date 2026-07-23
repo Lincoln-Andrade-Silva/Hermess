@@ -18,7 +18,7 @@ const ORDENS = [
   { valor: "recentes", label: "Novidades" },
   { valor: "menor-preco", label: "Menor preço" },
   { valor: "maior-preco", label: "Maior preço" },
-  { valor: "nome", label: "A–Z" },
+  { valor: "nome", label: "A-Z" },
 ];
 
 /**
@@ -106,7 +106,7 @@ export function OrdenarSelect({ className }: { className?: string }) {
   );
 }
 
-/** Conteúdo dos filtros (eixos). Estado na URL — link compartilhável. */
+/** Conteúdo dos filtros (eixos). Estado na URL - link compartilhável. */
 function PainelFiltros({ grupos }: { grupos: GrupoFiltro[] }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -194,12 +194,12 @@ function PainelFiltros({ grupos }: { grupos: GrupoFiltro[] }) {
   );
 }
 
-/** Coluna de filtros — desktop. */
+/** Coluna de filtros - desktop. */
 export function FiltrosSidebar({ grupos }: { grupos: GrupoFiltro[] }) {
   return <PainelFiltros grupos={grupos} />;
 }
 
-/** Botão + drawer de filtros — mobile. */
+/** Botão + drawer de filtros - mobile. */
 export function FiltrosDrawer({ grupos }: { grupos: GrupoFiltro[] }) {
   const searchParams = useSearchParams();
   const [aberto, setAberto] = useState(false);

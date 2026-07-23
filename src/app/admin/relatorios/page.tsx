@@ -22,10 +22,10 @@ const TABS = [
 
 const METODO_LABEL: Record<string, string> = {
   online: "Loja online (Mercado Pago)",
-  dinheiro: "Dinheiro",
-  pix: "Pix",
-  credito: "Crédito",
-  debito: "Débito",
+  dinheiro: "Dinheiro (Balcão)",
+  pix: "Pix (Balcão)",
+  credito: "Crédito (Balcão)",
+  debito: "Débito (Balcão)",
   balcao: "Balcão",
 };
 
@@ -167,7 +167,7 @@ async function Pagamentos({ inicio, fim }: { inicio: Date; fim: Date }) {
           <td className={tdr}>{l.vendas}</td>
           <td className={`${tdr} font-medium text-ink`}>{formatBRL(l.total)}</td>
           <td className={`${tdr} text-muted`}>
-            {total > 0 ? `${Math.round((l.total / total) * 100)}%` : "—"}
+            {total > 0 ? `${Math.round((l.total / total) * 100)}%` : "-"}
           </td>
         </tr>
       ))}

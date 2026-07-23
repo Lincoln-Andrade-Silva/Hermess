@@ -16,7 +16,7 @@ export interface ItemSacola {
 
 interface SacolaContexto {
   itens: ItemSacola[];
-  /** Só vira true após ler o localStorage — evita flicker/hidratação errada. */
+  /** Só vira true após ler o localStorage - evita flicker/hidratação errada. */
   pronto: boolean;
   quantidadeTotal: number;
   subtotal: number;

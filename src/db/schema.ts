@@ -33,8 +33,8 @@ export type Profile = typeof profiles.$inferSelect;
 export type NovoProfile = typeof profiles.$inferInsert;
 
 /**
- * Tabela livre exibida na página do produto. Matriz pura — a primeira coluna
- * é o rótulo da linha — para não amarrar o sistema a um domínio: uma loja de
+ * Tabela livre exibida na página do produto. Matriz pura - a primeira coluna
+ * é o rótulo da linha - para não amarrar o sistema a um domínio: uma loja de
  * roupa põe "Tamanho / Busto / Comprimento", uma de eletrônico põe
  * "Modelo / Voltagem / Potência". O título também é do lojista.
  */
@@ -122,9 +122,9 @@ export const produtosVariacoes = pgTable(
       .references(() => produtos.id, { onDelete: "cascade" }),
     sku: text("sku").notNull(),
     // Preço cheio. Desconto é responsabilidade do módulo de Promoções, que
-    // aplica regra e validade por cima deste valor — nunca sobrescrevendo-o.
+    // aplica regra e validade por cima deste valor - nunca sobrescrevendo-o.
     preco: numeric("preco", { precision: 10, scale: 2 }).notNull(),
-    // Custo de aquisição da peça — usado para acompanhar o custo no estoque.
+    // Custo de aquisição da peça - usado para acompanhar o custo no estoque.
     precoCusto: numeric("preco_custo", { precision: 10, scale: 2 }).notNull().default("0"),
     estoque: integer("estoque").notNull().default(0),
     // Reservado no checkout e liberado na expiração (Fase 4).
@@ -188,7 +188,7 @@ export const estoqueMovimentacoes = pgTable(
 export type EstoqueMovimentacao = typeof estoqueMovimentacoes.$inferSelect;
 
 /**
- * Banners da home. Arte pronta enviada pelo lojista — o sistema não sobrepõe
+ * Banners da home. Arte pronta enviada pelo lojista - o sistema não sobrepõe
  * texto. A imagem mobile é separada porque a proporção larga de um banner de
  * desktop fica ruim no celular; quando ausente, cai para a de desktop.
  */
@@ -209,7 +209,7 @@ export type Banner = typeof banners.$inferSelect;
 export type NovoBanner = typeof banners.$inferInsert;
 
 /**
- * Identidade e contato da loja. Linha única (1 loja por deploy) — o app sempre
+ * Identidade e contato da loja. Linha única (1 loja por deploy) - o app sempre
  * lê/escreve o primeiro registro. O nome cadastrado substitui "Hermess" em toda
  * a UI; ausência de registro cai no padrão do template.
  */
@@ -257,7 +257,7 @@ export const pedidos = pgTable(
     numero: serial("numero").notNull().unique(),
     // Nulo na venda de balcão sem cliente cadastrado.
     clienteId: uuid("cliente_id").references(() => profiles.id, { onDelete: "restrict" }),
-    // Snapshot do contato no momento da compra — o profile pode mudar depois.
+    // Snapshot do contato no momento da compra - o profile pode mudar depois.
     nome: text("nome").notNull(),
     telefone: text("telefone").notNull(),
     email: text("email"),
@@ -285,7 +285,7 @@ export type Pedido = typeof pedidos.$inferSelect;
 export type NovoPedido = typeof pedidos.$inferInsert;
 
 /**
- * Item do pedido com preço e combinação congelados na compra — alterações
+ * Item do pedido com preço e combinação congelados na compra - alterações
  * futuras no produto não reescrevem o histórico. `variacaoId` vira nulo se a
  * variação for excluída; a reserva já terá sido resolvida antes disso.
  */
@@ -307,7 +307,7 @@ export type NovoPedidoItem = typeof pedidoItens.$inferInsert;
 
 /**
  * Credenciais e taxa do gateway (Mercado Pago). Linha única. Segredos ficam só
- * no servidor — RLS deny. `taxaGateway` é o percentual retido por venda, usado
+ * no servidor - RLS deny. `taxaGateway` é o percentual retido por venda, usado
  * para exibir o líquido ao lojista no cadastro de produto.
  */
 export const pagamentoConfig = pgTable("pagamento_config", {

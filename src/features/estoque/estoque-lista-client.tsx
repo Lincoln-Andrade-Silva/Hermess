@@ -247,7 +247,7 @@ export function EstoqueListaClient({
         row.original.reservado > 0 ? (
           <span className="text-muted">{row.original.reservado}</span>
         ) : (
-          <span className="text-muted2">—</span>
+          <span className="text-muted2">-</span>
         ),
     },
     {
@@ -264,7 +264,7 @@ export function EstoqueListaClient({
             {formatBRL(custoEmEstoque(row.original))}
           </span>
         ) : (
-          <span className="text-muted2">—</span>
+          <span className="text-muted2">-</span>
         ),
     },
     {

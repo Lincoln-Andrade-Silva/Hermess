@@ -7,7 +7,7 @@ import postgres from "postgres";
  *
  * As vendas nascem "retirado" (contam como venda e podem ser excluídas depois
  * pela lixeira em Pedidos). O cliente é "Cliente Teste N" para fácil limpeza.
- * Não mexe no estoque — é só para visualizar os números.
+ * Não mexe no estoque - é só para visualizar os números.
  */
 const METODOS = ["dinheiro", "pix", "credito", "debito"] as const;
 const escolher = <T>(arr: readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
