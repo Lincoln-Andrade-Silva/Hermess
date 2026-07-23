@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 import { PageHeader, UrlTabBar } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
 import { formatBRL } from "@/lib/format";
-import { normalizarDias } from "@/lib/periodo";
-import { DashboardPeriodo } from "@/features/dashboard/dashboard-periodo";
+import { resolverIntervalo } from "@/lib/periodo";
+import { PeriodoSelector } from "@/features/dashboard/periodo-selector";
 import {
   relatorioEstoque,
   relatorioFaturamento,
@@ -29,6 +29,13 @@ const METODO_LABEL: Record<string, string> = {
   balcao: "Balcão",
 };
 
+const MOV_LABEL: Record<string, string> = {
+  entrada: "Entradas",
+  ajuste: "Ajustes",
+  venda: "Vendas",
+  devolucao: "Devoluções",
+};
+
 function ddmm(dia: string): string {
   const [, m, d] = dia.split("-");
   return `${d}/${m}`;
@@ -46,7 +53,7 @@ function Cartao({ rotulo, valor }: { rotulo: string; valor: string }) {
 function Tabela({ head, children }: { head: ReactNode; children: ReactNode }) {
   return (
     <div className="overflow-x-auto rounded-2xl border border-line">
-      <table className="w-full text-sm">
+      <table className="w-full min-w-[36rem] text-sm">
         <thead className="border-b border-line bg-surface/40">
           <tr>{head}</tr>
         </thead>
@@ -59,23 +66,28 @@ function Tabela({ head, children }: { head: ReactNode; children: ReactNode }) {
 const th = "whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted2";
 const thr = th.replace("text-left", "text-right");
 const td = "px-4 py-3";
-const tdr = "px-4 py-3 text-right tabular-nums";
+const tdr = "whitespace-nowrap px-4 py-3 text-right tabular-nums";
 
-async function Faturamento({ dias }: { dias: number }) {
-  const r = await relatorioFaturamento(dias);
+const vazio = (
+  <p className="rounded-2xl border border-dashed border-line2 py-12 text-center text-sm text-muted">
+    Sem dados no período.
+  </p>
+);
+
+async function Faturamento({ inicio, fim }: { inicio: Date; fim: Date }) {
+  const r = await relatorioFaturamento(inicio, fim);
+  const margemPct = r.total > 0 ? (r.margem / r.total) * 100 : 0;
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         <Cartao rotulo="Faturamento" valor={formatBRL(r.total)} />
         <Cartao rotulo="Custo" valor={formatBRL(r.custo)} />
-        <Cartao rotulo="Margem" valor={formatBRL(r.margem)} />
+        <Cartao rotulo={`Margem (${margemPct.toFixed(0)}%)`} valor={formatBRL(r.margem)} />
         <Cartao rotulo="Vendas" valor={String(r.vendas)} />
         <Cartao rotulo="Ticket médio" valor={formatBRL(r.ticket)} />
       </div>
       {r.porDia.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-line2 py-12 text-center text-sm text-muted">
-          Sem vendas no período.
-        </p>
+        vazio
       ) : (
         <Tabela
           head={
@@ -99,15 +111,9 @@ async function Faturamento({ dias }: { dias: number }) {
   );
 }
 
-async function Produtos({ dias }: { dias: number }) {
-  const linhas = await relatorioProdutos(dias);
-  if (linhas.length === 0) {
-    return (
-      <p className="rounded-2xl border border-dashed border-line2 py-12 text-center text-sm text-muted">
-        Sem vendas no período.
-      </p>
-    );
-  }
+async function Produtos({ inicio, fim }: { inicio: Date; fim: Date }) {
+  const linhas = await relatorioProdutos(inicio, fim);
+  if (linhas.length === 0) return vazio;
   return (
     <Tabela
       head={
@@ -123,19 +129,16 @@ async function Produtos({ dias }: { dias: number }) {
     >
       {linhas.map((p) => {
         const margem = p.faturamento - p.custo;
-        const margemPct = p.faturamento > 0 ? (margem / p.faturamento) * 100 : 0;
+        const pct = p.faturamento > 0 ? (margem / p.faturamento) * 100 : 0;
+        const cor = margem >= 0 ? "text-emerald-600" : "text-red-600";
         return (
           <tr key={p.nome}>
             <td className={`${td} font-medium text-ink`}>{p.nome}</td>
             <td className={tdr}>{p.quantidade}</td>
             <td className={tdr}>{formatBRL(p.faturamento)}</td>
             <td className={`${tdr} text-muted`}>{formatBRL(p.custo)}</td>
-            <td className={`${tdr} font-medium ${margem >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-              {formatBRL(margem)}
-            </td>
-            <td className={`${tdr} ${margem >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-              {margemPct.toFixed(0)}%
-            </td>
+            <td className={`${tdr} font-medium ${cor}`}>{formatBRL(margem)}</td>
+            <td className={`${tdr} ${cor}`}>{pct.toFixed(0)}%</td>
           </tr>
         );
       })}
@@ -143,16 +146,10 @@ async function Produtos({ dias }: { dias: number }) {
   );
 }
 
-async function Pagamentos({ dias }: { dias: number }) {
-  const linhas = await relatorioPagamentos(dias);
+async function Pagamentos({ inicio, fim }: { inicio: Date; fim: Date }) {
+  const linhas = await relatorioPagamentos(inicio, fim);
   const total = linhas.reduce((a, l) => a + l.total, 0);
-  if (linhas.length === 0) {
-    return (
-      <p className="rounded-2xl border border-dashed border-line2 py-12 text-center text-sm text-muted">
-        Sem vendas no período.
-      </p>
-    );
-  }
+  if (linhas.length === 0) return vazio;
   return (
     <Tabela
       head={
@@ -178,8 +175,8 @@ async function Pagamentos({ dias }: { dias: number }) {
   );
 }
 
-async function Estoque() {
-  const r = await relatorioEstoque();
+async function Estoque({ inicio, fim }: { inicio: Date; fim: Date }) {
+  const r = await relatorioEstoque(inicio, fim);
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -188,24 +185,57 @@ async function Estoque() {
         <Cartao rotulo="Estoque baixo" valor={String(r.variacoesBaixo)} />
         <Cartao rotulo="Esgotadas" valor={String(r.esgotadas)} />
       </div>
+
+      <div>
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted2">
+          Movimentações no período
+        </p>
+        {r.movimentacoes.length === 0 ? (
+          vazio
+        ) : (
+          <Tabela
+            head={
+              <>
+                <th className={th}>Tipo</th>
+                <th className={thr}>Peças</th>
+                <th className={thr}>Valor de custo</th>
+              </>
+            }
+          >
+            {r.movimentacoes.map((m) => (
+              <tr key={m.tipo}>
+                <td className={`${td} font-medium text-ink`}>{MOV_LABEL[m.tipo] ?? m.tipo}</td>
+                <td className={tdr}>{m.quantidade}</td>
+                <td className={`${tdr} font-medium text-ink`}>{formatBRL(m.valor)}</td>
+              </tr>
+            ))}
+          </Tabela>
+        )}
+      </div>
+
       {r.porCategoria.length > 0 && (
-        <Tabela
-          head={
-            <>
-              <th className={th}>Categoria</th>
-              <th className={thr}>Peças</th>
-              <th className={thr}>Valor de custo</th>
-            </>
-          }
-        >
-          {r.porCategoria.map((c) => (
-            <tr key={c.categoria}>
-              <td className={`${td} font-medium text-ink`}>{c.categoria}</td>
-              <td className={tdr}>{c.pecas}</td>
-              <td className={`${tdr} font-medium text-ink`}>{formatBRL(c.valor)}</td>
-            </tr>
-          ))}
-        </Tabela>
+        <div>
+          <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted2">
+            Valor por categoria
+          </p>
+          <Tabela
+            head={
+              <>
+                <th className={th}>Categoria</th>
+                <th className={thr}>Peças</th>
+                <th className={thr}>Valor de custo</th>
+              </>
+            }
+          >
+            {r.porCategoria.map((c) => (
+              <tr key={c.categoria}>
+                <td className={`${td} font-medium text-ink`}>{c.categoria}</td>
+                <td className={tdr}>{c.pecas}</td>
+                <td className={`${tdr} font-medium text-ink`}>{formatBRL(c.valor)}</td>
+              </tr>
+            ))}
+          </Tabela>
+        </div>
       )}
     </div>
   );
@@ -214,25 +244,24 @@ async function Estoque() {
 export default async function RelatoriosPage({
   searchParams,
 }: {
-  searchParams: { tab?: string; periodo?: string };
+  searchParams: { tab?: string; periodo?: string; de?: string; ate?: string };
 }) {
   await requireAdmin();
   const tab = searchParams.tab ?? "faturamento";
-  const dias = normalizarDias(searchParams.periodo);
+  const iv = resolverIntervalo(searchParams);
 
   let conteudo: ReactNode;
-  if (tab === "produtos") conteudo = <Produtos dias={dias} />;
-  else if (tab === "pagamentos") conteudo = <Pagamentos dias={dias} />;
-  else if (tab === "estoque") conteudo = <Estoque />;
-  else conteudo = <Faturamento dias={dias} />;
+  if (tab === "produtos") conteudo = <Produtos inicio={iv.inicio} fim={iv.fim} />;
+  else if (tab === "pagamentos") conteudo = <Pagamentos inicio={iv.inicio} fim={iv.fim} />;
+  else if (tab === "estoque") conteudo = <Estoque inicio={iv.inicio} fim={iv.fim} />;
+  else conteudo = <Faturamento inicio={iv.inicio} fim={iv.fim} />;
 
   return (
     <>
-      <PageHeader
-        title="Relatórios"
-        description="Faturamento, produtos, pagamentos e estoque."
-        action={tab !== "estoque" ? <DashboardPeriodo /> : undefined}
-      />
+      <PageHeader title="Relatórios" description={`Período: ${iv.label.toLowerCase()}.`} />
+      <div className="mb-5">
+        <PeriodoSelector />
+      </div>
       <UrlTabBar tabs={TABS} defaultTab="faturamento" resetParams={[]} />
       {conteudo}
     </>

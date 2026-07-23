@@ -1,10 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, ilike, inArray, or, sql } from "drizzle-orm";
+import { and, asc, count, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import {
+  categorias,
   estoqueMovimentacoes,
   pedidoItens,
   pedidos,
@@ -13,7 +14,10 @@ import {
   type Combinacao,
 } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
+import { offsetDaPagina, totalPaginas } from "@/lib/pagination";
 import { liberarReservasVencidas } from "@/features/pedidos/reserva";
+
+const PDV_PAGE_SIZE = 12;
 
 export interface VariacaoPdv {
   variacaoId: string;
@@ -25,39 +29,69 @@ export interface VariacaoPdv {
   imagem: string | null;
 }
 
-/** Busca variações ativas com saldo disponível, por nome do produto ou SKU. */
-export async function buscarVariacoesPdv(q: string): Promise<VariacaoPdv[]> {
-  await requireAdmin();
-  const termo = q.trim();
-  if (termo.length < 2) return [];
+export interface ListagemPdv {
+  itens: VariacaoPdv[];
+  page: number;
+  pageCount: number;
+}
 
+/**
+ * Variações ativas com saldo, paginadas. Sem busca já lista tudo (por nome do
+ * produto); filtros de texto (nome/SKU) e categoria são opcionais.
+ */
+export async function listarVariacoesPdv(params: {
+  q?: string;
+  categoria?: string;
+  page?: number;
+}): Promise<ListagemPdv> {
+  await requireAdmin();
   await liberarReservasVencidas();
 
-  return db
-    .select({
-      variacaoId: produtosVariacoes.id,
-      produtoNome: produtos.nome,
-      sku: produtosVariacoes.sku,
-      combinacao: produtosVariacoes.combinacao,
-      preco: produtosVariacoes.preco,
-      disponivel: sql<number>`(${produtosVariacoes.estoque} - ${produtosVariacoes.reservado})`,
-      imagem: sql<string | null>`coalesce(
-        ${produtosVariacoes.imagemUrl},
-        (select url from produtos_imagens where produto_id = ${produtosVariacoes.produtoId} order by ordem asc limit 1)
-      )`,
-    })
-    .from(produtosVariacoes)
-    .innerJoin(produtos, eq(produtos.id, produtosVariacoes.produtoId))
-    .where(
-      and(
-        eq(produtosVariacoes.ativo, true),
-        eq(produtos.ativo, true),
-        sql`(${produtosVariacoes.estoque} - ${produtosVariacoes.reservado}) > 0`,
-        or(ilike(produtos.nome, `%${termo}%`), ilike(produtosVariacoes.sku, `%${termo}%`)),
-      ),
-    )
-    .orderBy(produtos.nome)
-    .limit(20);
+  const page = Math.max(1, params.page ?? 1);
+  const q = params.q?.trim();
+
+  const conds = [
+    eq(produtosVariacoes.ativo, true),
+    eq(produtos.ativo, true),
+    sql`(${produtosVariacoes.estoque} - ${produtosVariacoes.reservado}) > 0`,
+  ];
+  if (q) {
+    const like = or(ilike(produtos.nome, `%${q}%`), ilike(produtosVariacoes.sku, `%${q}%`));
+    if (like) conds.push(like);
+  }
+  if (params.categoria) conds.push(eq(categorias.slug, params.categoria));
+  const where = and(...conds);
+
+  const [[{ total }], itens] = await Promise.all([
+    db
+      .select({ total: count() })
+      .from(produtosVariacoes)
+      .innerJoin(produtos, eq(produtos.id, produtosVariacoes.produtoId))
+      .leftJoin(categorias, eq(categorias.id, produtos.categoriaId))
+      .where(where),
+    db
+      .select({
+        variacaoId: produtosVariacoes.id,
+        produtoNome: produtos.nome,
+        sku: produtosVariacoes.sku,
+        combinacao: produtosVariacoes.combinacao,
+        preco: produtosVariacoes.preco,
+        disponivel: sql<number>`(${produtosVariacoes.estoque} - ${produtosVariacoes.reservado})`,
+        imagem: sql<string | null>`coalesce(
+          ${produtosVariacoes.imagemUrl},
+          (select url from produtos_imagens where produto_id = ${produtosVariacoes.produtoId} order by ordem asc limit 1)
+        )`,
+      })
+      .from(produtosVariacoes)
+      .innerJoin(produtos, eq(produtos.id, produtosVariacoes.produtoId))
+      .leftJoin(categorias, eq(categorias.id, produtos.categoriaId))
+      .where(where)
+      .orderBy(asc(produtos.nome), asc(produtosVariacoes.sku))
+      .limit(PDV_PAGE_SIZE)
+      .offset(offsetDaPagina(page, PDV_PAGE_SIZE)),
+  ]);
+
+  return { itens, page, pageCount: totalPaginas(total, PDV_PAGE_SIZE) };
 }
 
 const METODOS = ["dinheiro", "pix", "credito", "debito"] as const;
