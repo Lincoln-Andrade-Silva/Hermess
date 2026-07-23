@@ -45,29 +45,14 @@ export function PeriodoSelector() {
     );
 
   const dataInput = cn(
-    "h-10 rounded-lg border bg-surface px-3 text-sm text-ink outline-none transition [color-scheme:light] focus:border-brand",
+    "h-9 rounded-lg border bg-surface px-2.5 text-sm text-ink outline-none transition [color-scheme:light] focus:border-brand",
     personalizado ? "border-ink" : "border-line",
   );
 
   return (
-    <div className="space-y-2.5">
-      <div className="flex flex-wrap gap-2">
-        {PRESETS.map((p) => (
-          <button
-            key={p.valor}
-            type="button"
-            onClick={() => preset(p.valor)}
-            className={pill(!personalizado && periodo === p.valor)}
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-muted2">
-          Período específico
-        </span>
+    <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* Período específico — esquerda */}
+      <div className="flex items-center gap-2">
         <input
           type="date"
           value={de}
@@ -89,11 +74,26 @@ export function PeriodoSelector() {
           <button
             type="button"
             onClick={limpar}
+            aria-label="Limpar período"
             className="text-xs font-medium text-muted underline-offset-2 hover:text-ink hover:underline"
           >
             limpar
           </button>
         )}
+      </div>
+
+      {/* Presets — direita */}
+      <div className="flex gap-2">
+        {PRESETS.map((p) => (
+          <button
+            key={p.valor}
+            type="button"
+            onClick={() => preset(p.valor)}
+            className={pill(!personalizado && periodo === p.valor)}
+          >
+            {p.label}
+          </button>
+        ))}
       </div>
     </div>
   );
