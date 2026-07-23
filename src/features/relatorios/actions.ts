@@ -1,23 +1,21 @@
 "use server";
 
-import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, between, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   categorias,
+  estoqueMovimentacoes,
   pedidoItens,
   pedidos,
   produtos,
   produtosVariacoes,
+  type EstoqueMovimentacao,
   type Pedido,
 } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { getLojaInfo } from "@/lib/loja";
 
 const STATUS_VENDA: Pedido["status"][] = ["pago", "separando", "pronto_para_retirada", "retirado"];
-
-function cutoffDe(dias: number): Date {
-  return new Date(Date.now() - dias * 86_400_000);
-}
 
 export interface RelatorioFaturamento {
   total: number;
@@ -28,9 +26,9 @@ export interface RelatorioFaturamento {
   porDia: { dia: string; vendas: number; total: number }[];
 }
 
-export async function relatorioFaturamento(dias: number): Promise<RelatorioFaturamento> {
+export async function relatorioFaturamento(inicio: Date, fim: Date): Promise<RelatorioFaturamento> {
   await requireAdmin();
-  const where = and(inArray(pedidos.status, STATUS_VENDA), gte(pedidos.criadoEm, cutoffDe(dias)));
+  const where = and(inArray(pedidos.status, STATUS_VENDA), between(pedidos.criadoEm, inicio, fim));
 
   const [porDia, custoRows] = await Promise.all([
     db
@@ -66,9 +64,9 @@ export interface LinhaProduto {
   custo: number;
 }
 
-export async function relatorioProdutos(dias: number): Promise<LinhaProduto[]> {
+export async function relatorioProdutos(inicio: Date, fim: Date): Promise<LinhaProduto[]> {
   await requireAdmin();
-  const where = and(inArray(pedidos.status, STATUS_VENDA), gte(pedidos.criadoEm, cutoffDe(dias)));
+  const where = and(inArray(pedidos.status, STATUS_VENDA), between(pedidos.criadoEm, inicio, fim));
 
   return db
     .select({
@@ -91,19 +89,20 @@ export interface LinhaPagamento {
   total: number;
 }
 
-export async function relatorioPagamentos(dias: number): Promise<LinhaPagamento[]> {
+export async function relatorioPagamentos(inicio: Date, fim: Date): Promise<LinhaPagamento[]> {
   await requireAdmin();
-  const where = and(inArray(pedidos.status, STATUS_VENDA), gte(pedidos.criadoEm, cutoffDe(dias)));
+  const where = and(inArray(pedidos.status, STATUS_VENDA), between(pedidos.criadoEm, inicio, fim));
+  const metodo = sql<string>`case when ${pedidos.canal} = 'pdv' then coalesce(${pedidos.metodoPagamento}, 'balcao') else 'online' end`;
 
   return db
     .select({
-      metodo: sql<string>`case when ${pedidos.canal} = 'pdv' then coalesce(${pedidos.metodoPagamento}, 'balcao') else 'online' end`,
+      metodo,
       vendas: sql<number>`count(*)::int`,
       total: sql<number>`coalesce(sum(${pedidos.total}), 0)::float`,
     })
     .from(pedidos)
     .where(where)
-    .groupBy(sql`case when ${pedidos.canal} = 'pdv' then coalesce(${pedidos.metodoPagamento}, 'balcao') else 'online' end`)
+    .groupBy(metodo)
     .orderBy(desc(sql`coalesce(sum(${pedidos.total}), 0)`));
 }
 
@@ -113,41 +112,53 @@ export interface RelatorioEstoque {
   variacoesBaixo: number;
   esgotadas: number;
   porCategoria: { categoria: string; valor: number; pecas: number }[];
+  movimentacoes: { tipo: EstoqueMovimentacao["tipo"]; quantidade: number; valor: number }[];
 }
 
-export async function relatorioEstoque(): Promise<RelatorioEstoque> {
+export async function relatorioEstoque(inicio: Date, fim: Date): Promise<RelatorioEstoque> {
   await requireAdmin();
   const info = await getLojaInfo();
   const limite = info?.estoqueMinimo ?? 5;
 
-  const [totais] = await db
-    .select({
-      valor: sql<number>`coalesce(sum(${produtosVariacoes.estoque} * ${produtosVariacoes.precoCusto}), 0)::float`,
-      pecas: sql<number>`coalesce(sum(${produtosVariacoes.estoque}), 0)::int`,
-      baixo: sql<number>`count(*) filter (where ${produtosVariacoes.estoque} <= ${limite})::int`,
-      esgotadas: sql<number>`count(*) filter (where ${produtosVariacoes.estoque} = 0)::int`,
-    })
-    .from(produtosVariacoes)
-    .where(eq(produtosVariacoes.ativo, true));
-
-  const porCategoria = await db
-    .select({
-      categoria: sql<string>`coalesce(${categorias.nome}, 'Sem categoria')`,
-      valor: sql<number>`coalesce(sum(${produtosVariacoes.estoque} * ${produtosVariacoes.precoCusto}), 0)::float`,
-      pecas: sql<number>`coalesce(sum(${produtosVariacoes.estoque}), 0)::int`,
-    })
-    .from(produtosVariacoes)
-    .innerJoin(produtos, eq(produtos.id, produtosVariacoes.produtoId))
-    .leftJoin(categorias, eq(categorias.id, produtos.categoriaId))
-    .where(eq(produtosVariacoes.ativo, true))
-    .groupBy(sql`coalesce(${categorias.nome}, 'Sem categoria')`)
-    .orderBy(desc(sql`coalesce(sum(${produtosVariacoes.estoque} * ${produtosVariacoes.precoCusto}), 0)`));
+  const [totais, porCategoria, movimentacoes] = await Promise.all([
+    db
+      .select({
+        valor: sql<number>`coalesce(sum(${produtosVariacoes.estoque} * ${produtosVariacoes.precoCusto}), 0)::float`,
+        pecas: sql<number>`coalesce(sum(${produtosVariacoes.estoque}), 0)::int`,
+        baixo: sql<number>`count(*) filter (where ${produtosVariacoes.estoque} <= ${limite})::int`,
+        esgotadas: sql<number>`count(*) filter (where ${produtosVariacoes.estoque} = 0)::int`,
+      })
+      .from(produtosVariacoes)
+      .where(eq(produtosVariacoes.ativo, true)),
+    db
+      .select({
+        categoria: sql<string>`coalesce(${categorias.nome}, 'Sem categoria')`,
+        valor: sql<number>`coalesce(sum(${produtosVariacoes.estoque} * ${produtosVariacoes.precoCusto}), 0)::float`,
+        pecas: sql<number>`coalesce(sum(${produtosVariacoes.estoque}), 0)::int`,
+      })
+      .from(produtosVariacoes)
+      .innerJoin(produtos, eq(produtos.id, produtosVariacoes.produtoId))
+      .leftJoin(categorias, eq(categorias.id, produtos.categoriaId))
+      .where(eq(produtosVariacoes.ativo, true))
+      .groupBy(sql`coalesce(${categorias.nome}, 'Sem categoria')`)
+      .orderBy(desc(sql`coalesce(sum(${produtosVariacoes.estoque} * ${produtosVariacoes.precoCusto}), 0)`)),
+    db
+      .select({
+        tipo: estoqueMovimentacoes.tipo,
+        quantidade: sql<number>`coalesce(sum(abs(${estoqueMovimentacoes.quantidade})), 0)::int`,
+        valor: sql<number>`coalesce(sum(coalesce(${estoqueMovimentacoes.custoUnitario}, 0) * abs(${estoqueMovimentacoes.quantidade})), 0)::float`,
+      })
+      .from(estoqueMovimentacoes)
+      .where(between(estoqueMovimentacoes.criadoEm, inicio, fim))
+      .groupBy(estoqueMovimentacoes.tipo),
+  ]);
 
   return {
-    valorEmEstoque: totais?.valor ?? 0,
-    totalPecas: totais?.pecas ?? 0,
-    variacoesBaixo: totais?.baixo ?? 0,
-    esgotadas: totais?.esgotadas ?? 0,
+    valorEmEstoque: totais[0]?.valor ?? 0,
+    totalPecas: totais[0]?.pecas ?? 0,
+    variacoesBaixo: totais[0]?.baixo ?? 0,
+    esgotadas: totais[0]?.esgotadas ?? 0,
     porCategoria,
+    movimentacoes,
   };
 }

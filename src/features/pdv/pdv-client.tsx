@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { Check, Minus, Plus, Search, ShoppingBag, Trash2 } from "lucide-react";
-import { Button, FormError, Input } from "@/components/ui";
+import { Check, ChevronLeft, ChevronRight, Minus, Plus, Search, ShoppingBag, Trash2 } from "lucide-react";
+import { Button, FormError, Input, Select } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { formatBRL } from "@/lib/format";
-import { buscarVariacoesPdv, finalizarVendaPdv, type VariacaoPdv } from "./actions";
+import { finalizarVendaPdv, listarVariacoesPdv, type ListagemPdv, type VariacaoPdv } from "./actions";
 
 interface ItemVenda {
   variacaoId: string;
@@ -24,29 +24,38 @@ const METODOS = [
   { valor: "debito", label: "Débito" },
 ] as const;
 
-export function PdvClient() {
-  const [busca, setBusca] = useState("");
-  const [resultados, setResultados] = useState<VariacaoPdv[]>([]);
-  const [buscando, iniciarBusca] = useTransition();
+const LISTA_VAZIA: ListagemPdv = { itens: [], page: 1, pageCount: 1 };
+
+export function PdvClient({ categorias }: { categorias: { value: string; label: string }[] }) {
+  const [q, setQ] = useState("");
+  const [categoria, setCategoria] = useState("todas");
+  const [page, setPage] = useState(1);
+  const [versao, setVersao] = useState(0);
+  const [lista, setLista] = useState<ListagemPdv>(LISTA_VAZIA);
+  const [carregando, buscar] = useTransition();
+
   const [itens, setItens] = useState<ItemVenda[]>([]);
   const [nome, setNome] = useState("");
   const [metodo, setMetodo] = useState<(typeof METODOS)[number]["valor"]>("dinheiro");
   const [erro, setErro] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState<number | null>(null);
-  const [finalizando, iniciarFinalizacao] = useTransition();
-  const buscaRef = useRef<HTMLInputElement>(null);
+  const [finalizando, finalizar] = useTransition();
 
   useEffect(() => {
-    const termo = busca.trim();
-    if (termo.length < 2) {
-      setResultados([]);
-      return;
-    }
+    const atraso = q.trim() ? 300 : 0;
     const t = setTimeout(() => {
-      iniciarBusca(async () => setResultados(await buscarVariacoesPdv(termo)));
-    }, 300);
+      buscar(async () =>
+        setLista(
+          await listarVariacoesPdv({
+            q: q.trim() || undefined,
+            categoria: categoria === "todas" ? undefined : categoria,
+            page,
+          }),
+        ),
+      );
+    }, atraso);
     return () => clearTimeout(t);
-  }, [busca]);
+  }, [q, categoria, page, versao]);
 
   function adicionar(v: VariacaoPdv) {
     setSucesso(null);
@@ -77,18 +86,18 @@ export function PdvClient() {
     setItens((prev) =>
       prev.flatMap((i) => {
         if (i.variacaoId !== variacaoId) return [i];
-        const q = i.quantidade + delta;
-        if (q <= 0) return [];
-        return [{ ...i, quantidade: Math.min(i.disponivel, q) }];
+        const qtd = i.quantidade + delta;
+        if (qtd <= 0) return [];
+        return [{ ...i, quantidade: Math.min(i.disponivel, qtd) }];
       }),
     );
   }
 
   const total = itens.reduce((acc, i) => acc + Number(i.preco) * i.quantidade, 0);
 
-  function finalizar() {
+  function concluir() {
     setErro(null);
-    iniciarFinalizacao(async () => {
+    finalizar(async () => {
       const r = await finalizarVendaPdv({
         nome: nome.trim() || undefined,
         metodoPagamento: metodo,
@@ -101,40 +110,49 @@ export function PdvClient() {
       setSucesso(r.numero);
       setItens([]);
       setNome("");
-      setBusca("");
-      setResultados([]);
-      buscaRef.current?.focus();
+      setVersao((v) => v + 1); // recarrega o estoque na lista
     });
   }
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
-      {/* Busca e resultados */}
       <div>
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted2" />
-          <Input
-            ref={buscaRef}
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            placeholder="Buscar produto ou SKU para vender"
-            className="h-[50px] pl-10"
-            autoFocus
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted2" />
+            <Input
+              value={q}
+              onChange={(e) => {
+                setQ(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Buscar produto ou SKU"
+              className="h-[50px] pl-10"
+            />
+          </div>
+          <Select
+            value={categoria}
+            onChange={(v) => {
+              setCategoria(v);
+              setPage(1);
+            }}
+            options={[{ value: "todas", label: "Todas as categorias" }, ...categorias]}
+            className="sm:w-52"
           />
         </div>
 
-        <div className="mt-4 space-y-2">
-          {busca.trim().length >= 2 && resultados.length === 0 && !buscando && (
-            <p className="rounded-xl border border-dashed border-line2 px-4 py-8 text-center text-sm text-muted">
-              Nada com saldo encontrado.
-            </p>
+        <div
+          className={cn(
+            "mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3",
+            carregando && "opacity-50",
           )}
-          {resultados.map((v) => (
+        >
+          {lista.itens.map((v) => (
             <button
               key={v.variacaoId}
               type="button"
               onClick={() => adicionar(v)}
-              className="flex w-full items-center gap-3 rounded-xl border border-line p-3 text-left transition hover:border-ink"
+              className="flex items-center gap-3 rounded-xl border border-line p-2.5 text-left transition hover:border-ink"
             >
               <div className="h-14 w-11 shrink-0 overflow-hidden rounded-lg border border-line bg-surface">
                 {v.imagem && (
@@ -143,15 +161,48 @@ export function PdvClient() {
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-ink">{v.produtoNome}</p>
+                <p className="truncate text-sm font-medium text-ink">{v.produtoNome}</p>
                 <p className="font-mono text-xs text-muted">{v.sku}</p>
-                <p className="text-xs text-muted">{v.disponivel} em estoque</p>
+                <p className="text-xs font-semibold text-ink">
+                  {formatBRL(v.preco)}{" "}
+                  <span className="font-normal text-muted2">· {v.disponivel} un.</span>
+                </p>
               </div>
-              <span className="shrink-0 font-semibold text-ink">{formatBRL(v.preco)}</span>
-              <Plus className="h-5 w-5 shrink-0 text-muted2" />
             </button>
           ))}
         </div>
+
+        {lista.itens.length === 0 && !carregando && (
+          <p className="mt-4 rounded-xl border border-dashed border-line2 px-4 py-10 text-center text-sm text-muted">
+            Nenhum produto com saldo encontrado.
+          </p>
+        )}
+
+        {lista.pageCount > 1 && (
+          <div className="mt-4 flex items-center justify-center gap-4 text-sm text-muted">
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-1.5 transition hover:bg-surface disabled:opacity-40"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Anterior
+            </button>
+            <span>
+              {page} de {lista.pageCount}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.min(lista.pageCount, p + 1))}
+              disabled={page >= lista.pageCount}
+              className="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-1.5 transition hover:bg-surface disabled:opacity-40"
+            >
+              Próxima
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Carrinho da venda */}
@@ -178,7 +229,7 @@ export function PdvClient() {
                   </Link>
                 </div>
               ) : (
-                "Busque e toque num produto para adicionar."
+                "Toque num produto para adicionar à venda."
               )}
             </div>
           ) : (
@@ -260,7 +311,7 @@ export function PdvClient() {
 
                 {erro && <FormError>{erro}</FormError>}
 
-                <Button className="w-full py-3" onClick={finalizar} disabled={finalizando}>
+                <Button className="w-full py-3" onClick={concluir} disabled={finalizando}>
                   {finalizando ? "Registrando..." : `Finalizar · ${formatBRL(total)}`}
                 </Button>
               </div>

@@ -13,8 +13,9 @@ import {
 } from "@/db/schema";
 import { getCurrentProfile } from "@/lib/auth";
 import { RESERVA_MINUTOS } from "./constants";
-import { emailPedidoCriado } from "./emails";
+import { emailPedidoCancelado, emailPedidoCriado } from "./emails";
 import { selecionarItensComImagem, type ItemComImagem } from "./itens";
+import { aplicarCancelamento } from "./reconciliar";
 import { liberarReservasVencidas } from "./reserva";
 
 const itemSchema = z.object({
@@ -216,4 +217,26 @@ export async function listarMeusPedidos(): Promise<PedidoResumo[]> {
     .where(eq(pedidos.clienteId, profile.id))
     .groupBy(pedidos.id)
     .orderBy(desc(pedidos.criadoEm));
+}
+
+/**
+ * Cliente cancela o próprio pedido — permitido só antes do pagamento
+ * (`aguardando_pagamento`). Depois de pago, o cancelamento passa pela loja
+ * (que trata o estorno). Libera a reserva de estoque.
+ */
+export async function cancelarMeuPedido(numero: number): Promise<{ ok: boolean; erro?: string }> {
+  const profile = await getCurrentProfile();
+
+  const [pedido] = await db
+    .select()
+    .from(pedidos)
+    .where(and(eq(pedidos.numero, numero), eq(pedidos.clienteId, profile.id)));
+  if (!pedido) return { ok: false, erro: "Pedido não encontrado." };
+  if (pedido.status !== "aguardando_pagamento") {
+    return { ok: false, erro: "Só é possível cancelar antes do pagamento. Fale com a loja." };
+  }
+
+  const cancelou = await aplicarCancelamento(pedido.id);
+  if (cancelou) await emailPedidoCancelado(pedido.id);
+  return { ok: true };
 }
