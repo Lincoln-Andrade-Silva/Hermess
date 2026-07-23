@@ -92,7 +92,7 @@ export function PedidoAdminDetalheView({ pedido }: { pedido: PedidoAdminDetalhe 
         <div className="rounded-2xl border border-line p-5 text-sm">
           <p className="text-xs font-bold uppercase tracking-wider text-muted2">Pagamento</p>
           {pedido.canal === "pdv" ? (
-            <p className="mt-1 text-ink">Balcão · {METODO_LABEL[pedido.metodoPagamento ?? ""] ?? "—"}</p>
+            <p className="mt-1 text-ink">Balcão · {METODO_LABEL[pedido.metodoPagamento ?? ""] ?? "-"}</p>
           ) : pedido.gatewayPagamentoId ? (
             <p className="mt-1 text-ink">Mercado Pago #{pedido.gatewayPagamentoId}</p>
           ) : (

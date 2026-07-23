@@ -16,7 +16,7 @@ const STATUS_OPTIONS = [
   ...Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
 ];
 
-/** Pedido com pagamento ativo não some da lista — precisa ser cancelado antes. */
+/** Pedido com pagamento ativo não some da lista - precisa ser cancelado antes. */
 const NAO_EXCLUIVEIS = ["pago", "separando", "pronto_para_retirada"];
 
 function StatusCelula({ pedido }: { pedido: PedidoLinha }) {

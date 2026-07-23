@@ -193,7 +193,7 @@ export function ProdutoForm({ produto, categorias, taxaGateway }: Props) {
               Ficha técnica
             </h2>
             <p className="text-sm text-muted">
-              Tabela livre exibida na página do produto: medidas, especificações, composição — o que
+              Tabela livre exibida na página do produto: medidas, especificações, composição - o que
               fizer sentido para o que você vende.
             </p>
           </div>

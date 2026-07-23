@@ -19,7 +19,7 @@ interface DataTableServerProps<T> {
   emptyMessage?: string;
   /**
    * Substitui a tabela por cartões abaixo de `sm`. Tabela no celular obriga a
-   * rolar na horizontal, que é péssimo com o polegar — quando a listagem tem
+   * rolar na horizontal, que é péssimo com o polegar - quando a listagem tem
    * mais de duas colunas, vale sempre fornecer.
    */
   mobileCard?: (item: T) => React.ReactNode;

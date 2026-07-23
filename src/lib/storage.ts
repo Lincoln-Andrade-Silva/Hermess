@@ -19,7 +19,7 @@ function clienteStorage() {
 /**
  * Faz upload de uma imagem via service_role e devolve a URL pública.
  * Server-only. Valida tipo e tamanho aqui porque este é o ponto onde o
- * arquivo entra no sistema — a borda.
+ * arquivo entra no sistema - a borda.
  */
 export async function uploadImagem(file: File, pasta: string): Promise<string> {
   if (!TIPOS_PERMITIDOS.includes(file.type)) {

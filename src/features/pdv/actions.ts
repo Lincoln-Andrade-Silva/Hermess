@@ -11,6 +11,7 @@ import {
   pedidos,
   produtos,
   produtosVariacoes,
+  profiles,
   type Combinacao,
 } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
@@ -94,9 +95,39 @@ export async function listarVariacoesPdv(params: {
   return { itens, page, pageCount: totalPaginas(total, PDV_PAGE_SIZE) };
 }
 
+export interface ClientePdv {
+  id: string;
+  nome: string;
+  email: string;
+}
+
+/**
+ * Clientes cadastrados (ativos) para o PDV. Sem busca já traz os 5 primeiros;
+ * com termo, filtra por nome ou e-mail (até 8).
+ */
+export async function buscarClientesPdv(q: string): Promise<ClientePdv[]> {
+  await requireAdmin();
+  const termo = q.trim();
+
+  const filtro = termo
+    ? and(
+        eq(profiles.status, "ativo"),
+        or(ilike(profiles.nome, `%${termo}%`), ilike(profiles.email, `%${termo}%`)),
+      )
+    : eq(profiles.status, "ativo");
+
+  return db
+    .select({ id: profiles.id, nome: profiles.nome, email: profiles.email })
+    .from(profiles)
+    .where(filtro)
+    .orderBy(asc(profiles.nome))
+    .limit(termo ? 8 : 5);
+}
+
 const METODOS = ["dinheiro", "pix", "credito", "debito"] as const;
 
 const vendaSchema = z.object({
+  clienteId: z.string().uuid().optional(),
   nome: z.string().trim().max(120).optional(),
   metodoPagamento: z.enum(METODOS),
   itens: z
@@ -123,7 +154,7 @@ export async function finalizarVendaPdv(input: VendaPdvInput): Promise<Resultado
   if (!parsed.success) {
     return { ok: false, erro: parsed.error.issues[0]?.message ?? "Dados inválidos." };
   }
-  const { nome, metodoPagamento, itens } = parsed.data;
+  const { clienteId, nome, metodoPagamento, itens } = parsed.data;
 
   const somados = new Map<string, number>();
   for (const item of itens) {
@@ -183,6 +214,7 @@ export async function finalizarVendaPdv(input: VendaPdvInput): Promise<Resultado
       const [pedido] = await tx
         .insert(pedidos)
         .values({
+          clienteId: clienteId ?? null,
           nome: nome?.trim() || "Venda no balcão",
           telefone: "",
           canal: "pdv",

@@ -7,8 +7,8 @@ import { cn } from "@/lib/cn";
 import { enviarImagem } from "./actions";
 
 /**
- * Galeria com upload múltiplo e reordenação. A primeira imagem é a capa —
- * a que aparece no card da vitrine —, por isso a ordem é explícita e não
+ * Galeria com upload múltiplo e reordenação. A primeira imagem é a capa -
+ * a que aparece no card da vitrine -, por isso a ordem é explícita e não
  * depende da ordem de upload.
  */
 export function GaleriaEditor({

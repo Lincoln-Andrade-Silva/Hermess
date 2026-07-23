@@ -51,7 +51,7 @@ export async function criarPagamento(numero: number): Promise<ResultadoPagamento
       itens: itens.map((i) => {
         const combo = Object.values(i.combinacao).join(" · ");
         return {
-          titulo: combo ? `${i.nomeProduto} — ${combo}` : i.nomeProduto,
+          titulo: combo ? `${i.nomeProduto} - ${combo}` : i.nomeProduto,
           quantidade: i.quantidade,
           precoUnitario: Number(i.precoUnitario),
         };

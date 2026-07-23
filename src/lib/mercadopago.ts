@@ -17,7 +17,7 @@ export interface ItemPreferencia {
 
 /**
  * Cria uma preferência do Checkout Pro e devolve o link do checkout. O Checkout
- * Pro oferece Pix, crédito e débito conforme habilitado na conta do lojista —
+ * Pro oferece Pix, crédito e débito conforme habilitado na conta do lojista -
  * não restringimos os meios aqui.
  */
 export async function criarPreferencia(input: {
@@ -98,7 +98,7 @@ export function situacaoPagamento(status: string): "aprovado" | "estornado" | "p
 
 /**
  * Valida a assinatura (x-signature) da notificação. Em dev, ou sem segredo
- * configurado, aceita — facilita testar sem o segredo do painel do MP.
+ * configurado, aceita - facilita testar sem o segredo do painel do MP.
  */
 export async function validarWebhook(params: {
   xSignature: string | null;

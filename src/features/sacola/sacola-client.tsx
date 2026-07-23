@@ -47,7 +47,7 @@ export function SacolaClient({ cliente }: { cliente: Cliente | null }) {
     });
   }
 
-  // Antes de hidratar não dá pra saber se a sacola tem itens — evita piscar o vazio.
+  // Antes de hidratar não dá pra saber se a sacola tem itens - evita piscar o vazio.
   if (!pronto) {
     return <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6" />;
   }
@@ -158,7 +158,7 @@ export function SacolaClient({ cliente }: { cliente: Cliente | null }) {
             <div className="border-t border-line pt-4">
               {cliente ? (
                 <div className="space-y-3">
-                  {/* Dados do cadastro — informativo, sem edição. */}
+                  {/* Dados do cadastro - informativo, sem edição. */}
                   <div className="space-y-2 rounded-xl bg-surface/50 p-4">
                     <p className="text-[11px] font-bold uppercase tracking-wider text-muted2">
                       Retirada em nome de

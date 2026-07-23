@@ -27,7 +27,7 @@ export default async function HomePage() {
         <BannerHero banners={banners} />
       ) : (
         // Hero editorial: a foto ocupa a largura, a marca por cima. Sem foto,
-        // um bloco tipográfico — nunca uma caixa vazia.
+        // um bloco tipográfico - nunca uma caixa vazia.
         <section className="relative flex min-h-[62vh] items-end overflow-hidden border-b border-line sm:min-h-[70vh]">
           {destaque?.capa ? (
             <>

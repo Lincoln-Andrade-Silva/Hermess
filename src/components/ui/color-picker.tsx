@@ -9,7 +9,7 @@ import { Label } from "./field";
 
 /**
  * Paleta de partida. Cobre o que aparece na maioria dos catálogos sem obrigar
- * o lojista a saber hexadecimal — que é o problema do input nativo do sistema,
+ * o lojista a saber hexadecimal - que é o problema do input nativo do sistema,
  * ainda mais no celular, onde ele abre um seletor cru do Android/iOS.
  */
 const PALETA: { nome: string; hex: string }[] = [

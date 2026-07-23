@@ -193,7 +193,7 @@ export async function ajustarEstoque(
 
 /**
  * Edita os metadados de uma movimentação (NF, custo unitário e motivo). A
- * quantidade não é editável porque já moveu o saldo — para corrigir, faça uma
+ * quantidade não é editável porque já moveu o saldo - para corrigir, faça uma
  * nova entrada/ajuste.
  */
 export async function editarMovimentacao(

@@ -20,7 +20,7 @@ export async function getLojaInfo(): Promise<LojaInfo | null> {
 
 /**
  * Identidade exibida no login, no painel e na vitrine. Sem registro ou nome
- * vazio, cai no padrão do template — nada quebra num deploy recém-criado.
+ * vazio, cai no padrão do template - nada quebra num deploy recém-criado.
  */
 export async function getLojaBrand(): Promise<LojaBrand> {
   const info = await getLojaInfo();

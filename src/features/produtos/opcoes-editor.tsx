@@ -11,7 +11,7 @@ const HEX_PADRAO = "#111111";
 /**
  * Editor dos tipos de variação (Cor, Tamanho, Voltagem...). O tipo `cor`
  * habilita o seletor de hex, que é o que permite renderizar swatch e trocar a
- * galeria na vitrine — por isso ele vive na opção e não na variação.
+ * galeria na vitrine - por isso ele vive na opção e não na variação.
  *
  * Cada bloco colapsa: num produto já cadastrado o interessante é a grade,
  * não os eixos que raramente mudam.

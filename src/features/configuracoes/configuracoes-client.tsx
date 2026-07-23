@@ -68,7 +68,7 @@ export function ConfiguracoesClient({ info }: { info: LojaInfo | null }) {
       />
 
       <div className="max-w-2xl space-y-6">
-        <Field label="Logo" hint="(opcional, quadrada — png, jpeg, webp ou avif até 5MB)">
+        <Field label="Logo" hint="(opcional, quadrada - png, jpeg, webp ou avif até 5MB)">
           <div className="flex flex-col items-center gap-2 py-2">
             <div className="relative">
               <button
@@ -138,7 +138,7 @@ export function ConfiguracoesClient({ info }: { info: LojaInfo | null }) {
             id="cfg-endereco"
             value={endereco}
             onChange={(e) => setEndereco(e.target.value)}
-            placeholder="Rua, número, bairro — cidade/UF"
+            placeholder="Rua, número, bairro - cidade/UF"
           />
         </Field>
 

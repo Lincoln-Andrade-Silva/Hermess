@@ -9,7 +9,7 @@ import { cn } from "@/lib/cn";
 import { LogoutButton } from "@/features/auth/logout-button";
 import { useSacola } from "@/features/sacola/sacola-context";
 
-/** Glifo do Instagram — o lucide removeu ícones de marca por trademark. */
+/** Glifo do Instagram - o lucide removeu ícones de marca por trademark. */
 function InstagramIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -29,7 +29,7 @@ function InstagramIcon({ className }: { className?: string }) {
   );
 }
 
-/** Glifo do WhatsApp — também removido do lucide por trademark. */
+/** Glifo do WhatsApp - também removido do lucide por trademark. */
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden className={className}>
@@ -119,7 +119,7 @@ export function LojaShell({
           <Link
             href="/"
             className="flex shrink-0 items-center gap-2 px-2"
-            aria-label={`${nomeLoja} — início`}
+            aria-label={`${nomeLoja} - início`}
           >
             {logoUrl && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -131,7 +131,7 @@ export function LojaShell({
           </Link>
 
           <div className="flex flex-1 items-center justify-end gap-1">
-            {/* Conta some do header no mobile — vai para o menu lateral. */}
+            {/* Conta some do header no mobile - vai para o menu lateral. */}
             <div className="hidden items-center gap-1 sm:flex">
               {profile ? (
                 <>
@@ -159,7 +159,7 @@ export function LojaShell({
           </div>
         </div>
 
-        {/* Categorias numa faixa própria, centralizada — desktop só. */}
+        {/* Categorias numa faixa própria, centralizada - desktop só. */}
         {categorias.length > 0 && (
           <nav className="hidden justify-center gap-1 border-t border-line px-4 lg:flex">
             <Link

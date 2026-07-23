@@ -19,7 +19,7 @@ export interface VariacaoRascunho {
 
 /**
  * Chave estável de uma combinação. Ordena as chaves porque o Postgres também
- * normaliza o jsonb — assim client e banco enxergam a mesma identidade.
+ * normaliza o jsonb - assim client e banco enxergam a mesma identidade.
  */
 export function chaveCombinacao(combinacao: Combinacao): string {
   return Object.keys(combinacao)
@@ -52,7 +52,7 @@ function valoresOrdenados(eixos: EixoRascunho[], combinacao: Combinacao): string
  *
  * Duas regras de preservação, e a segunda é a que evita perder trabalho:
  *
- * 1. Combinação que continua existindo mantém tudo — casada por chave.
+ * 1. Combinação que continua existindo mantém tudo - casada por chave.
  * 2. Quando a quantidade de combinações não muda, o que houve foi renomear um
  *    valor, não trocar a grade. Nesse caso a linha é casada por posição, então
  *    corrigir "Pretp" para "Preto" preserva preço e estoque em vez de zerar.
@@ -66,7 +66,7 @@ export function sincronizarGrade(
 ): VariacaoRascunho[] {
   const eixosValidos = eixos.filter((e) => e.nome.trim() && e.valores.some((v) => v.valor.trim()));
 
-  // Sem eixos o produto tem uma variação única — item sem opções.
+  // Sem eixos o produto tem uma variação única - item sem opções.
   if (eixosValidos.length === 0) {
     const existente = atuais.find((v) => Object.keys(v.combinacao).length === 0) ?? atuais[0];
     return [

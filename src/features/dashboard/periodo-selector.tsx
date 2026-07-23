@@ -51,7 +51,7 @@ export function PeriodoSelector() {
 
   return (
     <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:justify-between">
-      {/* Período específico — esquerda */}
+      {/* Período específico - esquerda */}
       <div className="flex items-center gap-2">
         <input
           type="date"
@@ -82,7 +82,7 @@ export function PeriodoSelector() {
         )}
       </div>
 
-      {/* Presets — direita */}
+      {/* Presets - direita */}
       <div className="flex gap-2">
         {PRESETS.map((p) => (
           <button

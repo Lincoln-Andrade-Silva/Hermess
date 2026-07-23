@@ -73,11 +73,11 @@ export function ProdutosClient({
       header: "Preço",
       cell: ({ row }) => {
         const { precoMin, precoMax } = row.original;
-        if (!precoMin) return <span className="text-muted2">—</span>;
+        if (!precoMin) return <span className="text-muted2">-</span>;
         return (
           <span className="whitespace-nowrap">
             {formatBRL(precoMin)}
-            {precoMax && precoMax !== precoMin && ` – ${formatBRL(precoMax)}`}
+            {precoMax && precoMax !== precoMin && ` a ${formatBRL(precoMax)}`}
           </span>
         );
       },
@@ -179,7 +179,7 @@ export function ProdutosClient({
                     {formatBRL(produto.precoMin)}
                     {produto.precoMax &&
                       produto.precoMax !== produto.precoMin &&
-                      ` – ${formatBRL(produto.precoMax)}`}
+                      ` a ${formatBRL(produto.precoMax)}`}
                   </>
                 ) : (
                   <span className="text-muted2">sem preço</span>

@@ -6,7 +6,7 @@ import type { ProdutoVitrine } from "./queries";
 
 /**
  * Card da vitrine. Deliberadamente enxuto: foto dominante, nome e preço. As
- * cores viram swatches pequenos que só aparecem no hover — chips de tamanho
+ * cores viram swatches pequenos que só aparecem no hover - chips de tamanho
  * poluíam a grade e são informação de página de produto, não de listagem.
  */
 export function ProdutoCard({ produto, prioridade }: { produto: ProdutoVitrine; prioridade?: boolean }) {

@@ -15,7 +15,7 @@ export interface ItemComImagem {
   precoUnitario: string;
   quantidade: number;
   imagem: string | null;
-  /** Slug do produto quando ainda existe e está ativo — para linkar à vitrine. */
+  /** Slug do produto quando ainda existe e está ativo - para linkar à vitrine. */
   slug: string | null;
 }
 

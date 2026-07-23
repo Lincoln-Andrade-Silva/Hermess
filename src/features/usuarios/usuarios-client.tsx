@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Pencil } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import {
   Badge,
   Button,
@@ -17,7 +17,96 @@ import {
   UrlSelect,
 } from "@/components/ui";
 import { formatData } from "@/lib/format";
-import { atualizarUsuario, type LinhaUsuario, type ListagemUsuarios } from "./actions";
+import { atualizarUsuario, criarUsuario, type LinhaUsuario, type ListagemUsuarios } from "./actions";
+
+function CriarUsuario() {
+  const router = useRouter();
+  const [aberto, setAberto] = useState(false);
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [tipo, setTipo] = useState<LinhaUsuario["tipo"]>("cliente");
+  const [erro, setErro] = useState<string | null>(null);
+  const [salvando, iniciar] = useTransition();
+
+  function abrir() {
+    setNome("");
+    setEmail("");
+    setSenha("");
+    setTipo("cliente");
+    setErro(null);
+    setAberto(true);
+  }
+
+  function salvar() {
+    setErro(null);
+    iniciar(async () => {
+      const r = await criarUsuario({ nome, email, senha, tipo });
+      if (!r.ok) {
+        setErro(r.erro ?? "Não foi possível criar.");
+        return;
+      }
+      setAberto(false);
+      router.refresh();
+    });
+  }
+
+  return (
+    <>
+      <Button onClick={abrir} className="w-full sm:w-auto">
+        <Plus className="h-4 w-4" />
+        Novo usuário
+      </Button>
+
+      <Modal open={aberto} onClose={() => setAberto(false)} title="Novo usuário" className="max-w-md">
+        <div className="space-y-4">
+          <Field label="Nome" htmlFor="novo-nome">
+            <Input id="novo-nome" value={nome} onChange={(e) => setNome(e.target.value)} maxLength={120} />
+          </Field>
+          <Field label="E-mail" htmlFor="novo-email">
+            <Input
+              id="novo-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="off"
+            />
+          </Field>
+          <Field label="Senha" htmlFor="novo-senha" hint="(mínimo 6)">
+            <Input
+              id="novo-senha"
+              type="text"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              autoComplete="off"
+            />
+          </Field>
+          <Field label="Tipo" htmlFor="novo-tipo">
+            <Select
+              value={tipo}
+              onChange={(v) => setTipo(v as LinhaUsuario["tipo"])}
+              options={[
+                { value: "cliente", label: "Cliente" },
+                { value: "admin", label: "Admin" },
+              ]}
+            />
+          </Field>
+
+          {erro && <FormError>{erro}</FormError>}
+
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button variant="secondary" onClick={() => setAberto(false)} disabled={salvando}>
+              Cancelar
+            </Button>
+            <Button onClick={salvar} disabled={salvando}>
+              {salvando ? "Criando..." : "Criar usuário"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
+  );
+}
 
 const TIPO_LABEL: Record<string, string> = { admin: "Admin", cliente: "Cliente" };
 
@@ -136,7 +225,7 @@ const columns: ColumnDef<LinhaUsuario>[] = [
       row.original.telefone ? (
         <span className="text-muted">{row.original.telefone}</span>
       ) : (
-        <span className="text-muted2">—</span>
+        <span className="text-muted2">-</span>
       ),
   },
   {
@@ -188,6 +277,7 @@ export function UsuariosClient({ lista }: { lista: ListagemUsuarios }) {
           <UrlSelect param="status" options={STATUS_OPTIONS} className="sm:w-44" />
         </div>
       }
+      actions={<CriarUsuario />}
       emptyMessage="Nenhum usuário encontrado."
       mobileCard={(u) => (
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-line p-4">

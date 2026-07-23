@@ -1,12 +1,127 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { Check, ChevronLeft, ChevronRight, Minus, Plus, Search, ShoppingBag, Trash2 } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Minus,
+  Plus,
+  Search,
+  ShoppingBag,
+  Trash2,
+} from "lucide-react";
 import { Button, FormError, Input, Select } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { formatBRL } from "@/lib/format";
-import { finalizarVendaPdv, listarVariacoesPdv, type ListagemPdv, type VariacaoPdv } from "./actions";
+import {
+  buscarClientesPdv,
+  finalizarVendaPdv,
+  listarVariacoesPdv,
+  type ClientePdv,
+  type ListagemPdv,
+  type VariacaoPdv,
+} from "./actions";
+
+interface ClienteSelecionado {
+  id: string;
+  nome: string;
+}
+
+/** Combobox para escolher um cliente cadastrado ou "Não cadastrado". */
+function SeletorCliente({
+  cliente,
+  onChange,
+}: {
+  cliente: ClienteSelecionado | null;
+  onChange: (c: ClienteSelecionado | null) => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const [q, setQ] = useState("");
+  const [resultados, setResultados] = useState<ClientePdv[]>([]);
+  const [, buscar] = useTransition();
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onDoc(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setAberto(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  useEffect(() => {
+    if (!aberto) return;
+    const t = setTimeout(() => {
+      buscar(async () => setResultados(await buscarClientesPdv(q)));
+    }, 250);
+    return () => clearTimeout(t);
+  }, [q, aberto]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setAberto((a) => !a)}
+        className="flex h-[50px] w-full items-center justify-between gap-2 rounded-lg border border-line bg-surface px-4 text-sm transition hover:border-line2"
+      >
+        <span className={cn("truncate", cliente ? "font-medium text-ink" : "text-muted")}>
+          {cliente ? cliente.nome : "Não cadastrado"}
+        </span>
+        <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted2 transition", aberto && "rotate-180")} />
+      </button>
+
+      {aberto && (
+        <div className="absolute left-0 z-30 mt-2 w-full overflow-hidden rounded-xl border border-line bg-bg p-1 shadow-xl">
+          <div className="relative mb-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted2" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Buscar por nome ou e-mail..."
+              autoFocus
+              className="h-10 w-full rounded-md border border-line bg-surface pl-9 pr-3 text-sm outline-none focus:border-brand"
+            />
+          </div>
+          <div className="max-h-56 overflow-y-auto">
+            <button
+              type="button"
+              onClick={() => {
+                onChange(null);
+                setAberto(false);
+              }}
+              className={cn(
+                "block w-full rounded-md px-3 py-2 text-left text-sm transition hover:bg-surface",
+                !cliente ? "font-medium text-ink" : "text-muted",
+              )}
+            >
+              Não cadastrado
+            </button>
+            {resultados.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => {
+                  onChange({ id: c.id, nome: c.nome });
+                  setAberto(false);
+                }}
+                className="block w-full rounded-md px-3 py-2 text-left transition hover:bg-surface"
+              >
+                <span className="block truncate text-sm font-medium text-ink">{c.nome}</span>
+                <span className="block truncate text-xs text-muted">{c.email}</span>
+              </button>
+            ))}
+            {q.trim().length >= 2 && resultados.length === 0 && (
+              <p className="px-3 py-2 text-sm text-muted">Nenhum cliente encontrado.</p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface ItemVenda {
   variacaoId: string;
@@ -35,7 +150,8 @@ export function PdvClient({ categorias }: { categorias: { value: string; label: 
   const [carregando, buscar] = useTransition();
 
   const [itens, setItens] = useState<ItemVenda[]>([]);
-  const [nome, setNome] = useState("");
+  const [cliente, setCliente] = useState<ClienteSelecionado | null>(null);
+  const [nomeAvulso, setNomeAvulso] = useState("");
   const [metodo, setMetodo] = useState<(typeof METODOS)[number]["valor"]>("dinheiro");
   const [erro, setErro] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState<number | null>(null);
@@ -99,7 +215,8 @@ export function PdvClient({ categorias }: { categorias: { value: string; label: 
     setErro(null);
     finalizar(async () => {
       const r = await finalizarVendaPdv({
-        nome: nome.trim() || undefined,
+        clienteId: cliente?.id,
+        nome: cliente ? cliente.nome : nomeAvulso.trim() || undefined,
         metodoPagamento: metodo,
         itens: itens.map((i) => ({ variacaoId: i.variacaoId, quantidade: i.quantidade })),
       });
@@ -109,14 +226,15 @@ export function PdvClient({ categorias }: { categorias: { value: string; label: 
       }
       setSucesso(r.numero);
       setItens([]);
-      setNome("");
+      setCliente(null);
+      setNomeAvulso("");
       setVersao((v) => v + 1); // recarrega o estoque na lista
     });
   }
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
-      <div>
+      <div className="min-w-0">
         <div className="flex flex-col gap-2 sm:flex-row">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted2" />
@@ -142,28 +260,25 @@ export function PdvClient({ categorias }: { categorias: { value: string; label: 
         </div>
 
         <div
-          className={cn(
-            "mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3",
-            carregando && "opacity-50",
-          )}
+          className={cn("mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2", carregando && "opacity-50")}
         >
           {lista.itens.map((v) => (
             <button
               key={v.variacaoId}
               type="button"
               onClick={() => adicionar(v)}
-              className="flex items-center gap-4 rounded-2xl border border-line p-3.5 text-left transition hover:border-ink hover:shadow-sm"
+              className="flex items-center gap-4 rounded-2xl border border-line p-4 text-left transition hover:border-ink hover:shadow-sm"
             >
-              <div className="h-24 w-20 shrink-0 overflow-hidden rounded-xl border border-line bg-surface">
+              <div className="h-28 w-24 shrink-0 overflow-hidden rounded-xl border border-line bg-surface">
                 {v.imagem && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={v.imagem} alt="" className="h-full w-full object-cover object-top" />
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-ink">{v.produtoNome}</p>
-                <p className="font-mono text-xs text-muted">{v.sku}</p>
-                <p className="mt-1 text-lg font-bold text-ink">{formatBRL(v.preco)}</p>
+                <p className="line-clamp-2 font-medium leading-snug text-ink">{v.produtoNome}</p>
+                <p className="mt-0.5 truncate font-mono text-xs text-muted">{v.sku}</p>
+                <p className="mt-1.5 text-xl font-bold text-ink">{formatBRL(v.preco)}</p>
                 <p className="text-xs text-muted2">{v.disponivel} em estoque</p>
               </div>
               <Plus className="h-5 w-5 shrink-0 text-muted2" />
@@ -302,11 +417,17 @@ export function PdvClient({ categorias }: { categorias: { value: string; label: 
                   </div>
                 </div>
 
-                <Input
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  placeholder="Nome do cliente (opcional)"
-                />
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted2">Cliente</p>
+                  <SeletorCliente cliente={cliente} onChange={setCliente} />
+                  {!cliente && (
+                    <Input
+                      value={nomeAvulso}
+                      onChange={(e) => setNomeAvulso(e.target.value)}
+                      placeholder="Nome do cliente (opcional)"
+                    />
+                  )}
+                </div>
 
                 {erro && <FormError>{erro}</FormError>}
 

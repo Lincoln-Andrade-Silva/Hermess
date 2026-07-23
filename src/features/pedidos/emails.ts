@@ -153,7 +153,7 @@ function layout(
   </table>`;
 }
 
-/** Executa um disparo protegido — nenhuma falha de e-mail afeta a operação. */
+/** Executa um disparo protegido - nenhuma falha de e-mail afeta a operação. */
 async function disparar(fn: () => Promise<void>): Promise<void> {
   try {
     await fn();
@@ -209,7 +209,7 @@ export async function emailPedidoPago(pedidoId: string): Promise<void> {
       enviarEmail({
         to: pedido.emailCliente ?? "",
         fromName: marca.nome,
-        subject: `Pagamento confirmado — pedido #${pedido.numero}`,
+        subject: `Pagamento confirmado - pedido #${pedido.numero}`,
         html: layout(marca, {
           titulo: "Pagamento confirmado!",
           intro: `Recebemos o pagamento do pedido <strong>#${pedido.numero}</strong>. Já vamos preparar tudo para a retirada.`,

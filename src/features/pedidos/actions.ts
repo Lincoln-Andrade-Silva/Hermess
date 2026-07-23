@@ -53,7 +53,7 @@ export async function finalizarPedido(input: CheckoutInput): Promise<ResultadoCh
     return { ok: false, erro: "Informe um telefone para contato." };
   }
 
-  // Uma variação não pode aparecer duas vezes — some as quantidades antes.
+  // Uma variação não pode aparecer duas vezes - some as quantidades antes.
   const somados = new Map<string, number>();
   for (const item of itens) {
     somados.set(item.variacaoId, (somados.get(item.variacaoId) ?? 0) + item.quantidade);
@@ -96,7 +96,7 @@ export async function finalizarPedido(input: CheckoutInput): Promise<ResultadoCh
         }
 
         // UPDATE condicional: só reserva se o disponível cobre, e o WHERE
-        // trava a linha — dois checkouts pela última unidade não passam ambos.
+        // trava a linha - dois checkouts pela última unidade não passam ambos.
         const reservada = await tx
           .update(produtosVariacoes)
           .set({ reservado: sql`${produtosVariacoes.reservado} + ${linha.quantidade}` })
@@ -220,7 +220,7 @@ export async function listarMeusPedidos(): Promise<PedidoResumo[]> {
 }
 
 /**
- * Cliente cancela o próprio pedido — permitido só antes do pagamento
+ * Cliente cancela o próprio pedido - permitido só antes do pagamento
  * (`aguardando_pagamento`). Depois de pago, o cancelamento passa pela loja
  * (que trata o estorno). Libera a reserva de estoque.
  */

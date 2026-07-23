@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 /**
  * Libera reservas de pedidos vencidos. Chamado pelo Vercel Cron (que envia
  * `Authorization: Bearer <CRON_SECRET>`). Se `CRON_SECRET` estiver definido,
- * exige o header; sem ele, aceita — facilita o dev local.
+ * exige o header; sem ele, aceita - facilita o dev local.
  */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;

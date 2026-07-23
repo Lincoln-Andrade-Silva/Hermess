@@ -7,6 +7,7 @@ import {
   Clock,
   Coins,
   Package,
+  Percent,
   Receipt,
   TrendingUp,
 } from "lucide-react";
@@ -22,10 +23,10 @@ export const dynamic = "force-dynamic";
 
 const METODO_LABEL: Record<string, string> = {
   online: "Online (Mercado Pago)",
-  dinheiro: "Dinheiro",
-  pix: "Pix",
-  credito: "Crédito",
-  debito: "Débito",
+  dinheiro: "Dinheiro (Balcão)",
+  pix: "Pix (Balcão)",
+  credito: "Crédito (Balcão)",
+  debito: "Débito (Balcão)",
   balcao: "Balcão",
 };
 
@@ -69,21 +70,44 @@ function Kpi({
   rotulo,
   valor,
   delta,
+  href,
+  alerta,
 }: {
   icon: typeof TrendingUp;
   rotulo: string;
   valor: string;
   delta?: ReactNode;
+  href?: string;
+  alerta?: boolean;
 }) {
-  return (
-    <div className="rounded-2xl border border-line p-5">
-      <div className="flex items-center gap-2 text-muted2">
+  const classe = cn(
+    "block rounded-2xl border p-5 transition",
+    alerta ? "border-amber-500/40 bg-amber-50" : "border-line",
+    href && "hover:border-ink",
+  );
+  const conteudo = (
+    <>
+      <div className={cn("flex items-center gap-2", alerta ? "text-amber-600" : "text-muted2")}>
         <Icon className="h-4 w-4" strokeWidth={1.8} />
         <span className="text-[11px] font-bold uppercase tracking-wider">{rotulo}</span>
       </div>
-      <p className="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink">{valor}</p>
+      <p
+        className={cn(
+          "mt-2 font-display text-3xl font-extrabold tracking-tight",
+          alerta ? "text-amber-700" : "text-ink",
+        )}
+      >
+        {valor}
+      </p>
       {delta && <p className="mt-1">{delta}</p>}
-    </div>
+    </>
+  );
+  return href ? (
+    <Link href={href} className={classe}>
+      {conteudo}
+    </Link>
+  ) : (
+    <div className={classe}>{conteudo}</div>
   );
 }
 
@@ -122,31 +146,7 @@ export default async function AdminDashboardPage({
         <PeriodoSelector />
       </div>
 
-      {/* Alertas acionáveis */}
-      {(r.aguardando > 0 || r.estoqueBaixo > 0) && (
-        <div className="mt-6 flex flex-wrap gap-3">
-          {r.aguardando > 0 && (
-            <Link
-              href="/admin/pedidos?status=aguardando_pagamento"
-              className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-50 px-4 py-2.5 text-sm text-amber-800 transition hover:border-amber-500"
-            >
-              <Clock className="h-4 w-4" />
-              <strong>{r.aguardando}</strong> aguardando pagamento
-            </Link>
-          )}
-          {r.estoqueBaixo > 0 && (
-            <Link
-              href="/admin/estoque?baixo=1"
-              className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-50 px-4 py-2.5 text-sm text-amber-800 transition hover:border-amber-500"
-            >
-              <Boxes className="h-4 w-4" />
-              <strong>{r.estoqueBaixo}</strong> com estoque baixo
-            </Link>
-          )}
-        </div>
-      )}
-
-      {/* KPIs */}
+      {/* KPIs financeiros */}
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Kpi
           icon={TrendingUp}
@@ -167,7 +167,7 @@ export default async function AdminDashboardPage({
           delta={<Delta pct={variacao(r.ticketMedio, r.ticketMedioAnterior)} base={r.labelAnterior} />}
         />
         <Kpi
-          icon={Package}
+          icon={Percent}
           rotulo="Margem"
           valor={formatBRL(r.margem)}
           delta={
@@ -175,6 +175,24 @@ export default async function AdminDashboardPage({
               {margemPct.toFixed(0)}% · custo {formatBRL(r.custo)}
             </span>
           }
+        />
+      </div>
+
+      {/* KPIs operacionais */}
+      <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Kpi icon={Package} rotulo="Itens vendidos" valor={String(r.itensVendidos)} />
+        <Kpi
+          icon={Clock}
+          rotulo="Aguardando pagamento"
+          valor={String(r.aguardando)}
+          href="/admin/pedidos?status=aguardando_pagamento"
+        />
+        <Kpi
+          icon={Boxes}
+          rotulo="Estoque baixo"
+          valor={String(r.estoqueBaixo)}
+          href="/admin/estoque?baixo=1"
+          alerta={r.estoqueBaixo > 0}
         />
       </div>
 
@@ -188,9 +206,6 @@ export default async function AdminDashboardPage({
               <strong className="text-sm text-ink">{s.quantidade}</strong>
             </span>
           ))}
-          <span className="ml-auto text-sm text-muted">
-            {r.itensVendidos} itens vendidos
-          </span>
         </div>
       )}
 

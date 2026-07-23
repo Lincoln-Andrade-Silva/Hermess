@@ -3,7 +3,7 @@ import { asc } from "drizzle-orm";
 import { db } from "@/db";
 import { pagamentoConfig, type PagamentoConfig } from "@/db/schema";
 
-/** Config do gateway (linha única). Server-only — nunca expor o access_token no client. */
+/** Config do gateway (linha única). Server-only - nunca expor o access_token no client. */
 export async function getPagamentoConfig(): Promise<PagamentoConfig | null> {
   const [row] = await db
     .select()
