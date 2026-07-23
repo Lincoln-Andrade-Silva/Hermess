@@ -143,7 +143,7 @@ export function PdvClient({ categorias }: { categorias: { value: string; label: 
 
         <div
           className={cn(
-            "mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3",
+            "mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3",
             carregando && "opacity-50",
           )}
         >
@@ -152,22 +152,21 @@ export function PdvClient({ categorias }: { categorias: { value: string; label: 
               key={v.variacaoId}
               type="button"
               onClick={() => adicionar(v)}
-              className="flex items-center gap-3 rounded-xl border border-line p-2.5 text-left transition hover:border-ink"
+              className="flex items-center gap-4 rounded-2xl border border-line p-3.5 text-left transition hover:border-ink hover:shadow-sm"
             >
-              <div className="h-14 w-11 shrink-0 overflow-hidden rounded-lg border border-line bg-surface">
+              <div className="h-24 w-20 shrink-0 overflow-hidden rounded-xl border border-line bg-surface">
                 {v.imagem && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={v.imagem} alt="" className="h-full w-full object-cover object-top" />
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-ink">{v.produtoNome}</p>
+                <p className="truncate font-medium text-ink">{v.produtoNome}</p>
                 <p className="font-mono text-xs text-muted">{v.sku}</p>
-                <p className="text-xs font-semibold text-ink">
-                  {formatBRL(v.preco)}{" "}
-                  <span className="font-normal text-muted2">· {v.disponivel} un.</span>
-                </p>
+                <p className="mt-1 text-lg font-bold text-ink">{formatBRL(v.preco)}</p>
+                <p className="text-xs text-muted2">{v.disponivel} em estoque</p>
               </div>
+              <Plus className="h-5 w-5 shrink-0 text-muted2" />
             </button>
           ))}
         </div>
