@@ -7,7 +7,12 @@ import { pedidoItens, pedidos, statusPedido, type Pedido } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { estornarPagamento } from "@/lib/mercadopago";
 import { offsetDaPagina, PAGE_SIZE, parsePagina, totalPaginas } from "@/lib/pagination";
-import { emailPedidoCancelado, emailPedidoPronto } from "./emails";
+import {
+  emailPedidoCancelado,
+  emailPedidoPronto,
+  emailReembolsoAprovado,
+  emailReembolsoRecusado,
+} from "./emails";
 import { selecionarItensComImagem, type ItemComImagem } from "./itens";
 import { aplicarCancelamento } from "./reconciliar";
 import { CANCELAVEIS, PROXIMO_STATUS } from "./status";
@@ -22,6 +27,7 @@ export interface ResultadoAcao {
 export interface PedidoLinha {
   numero: number;
   status: StatusPedido;
+  reembolso: Pedido["reembolso"];
   canal: Pedido["canal"];
   nome: string;
   telefone: string;
@@ -66,6 +72,7 @@ export async function listarPedidosAdmin(params: {
       .select({
         numero: pedidos.numero,
         status: pedidos.status,
+        reembolso: pedidos.reembolso,
         canal: pedidos.canal,
         nome: pedidos.nome,
         telefone: pedidos.telefone,
@@ -96,6 +103,9 @@ export interface PedidoAdminDetalhe {
   total: string;
   gatewayPagamentoId: string | null;
   pendenciaEstoque: boolean;
+  reembolso: Pedido["reembolso"];
+  reembolsoMotivo: string | null;
+  reembolsoEstoquePendente: boolean;
   expiraEm: Date;
   criadoEm: Date;
   itens: ItemComImagem[];
@@ -119,6 +129,9 @@ export async function buscarPedidoAdmin(numero: number): Promise<PedidoAdminDeta
     total: pedido.total,
     gatewayPagamentoId: pedido.gatewayPagamentoId,
     pendenciaEstoque: pedido.pendenciaEstoque,
+    reembolso: pedido.reembolso,
+    reembolsoMotivo: pedido.reembolsoMotivo,
+    reembolsoEstoquePendente: pedido.reembolsoEstoquePendente,
     expiraEm: pedido.expiraEm,
     criadoEm: pedido.criadoEm,
     itens,
@@ -201,6 +214,128 @@ export async function cancelarPedido(numero: number): Promise<ResultadoAcao> {
 
   const cancelou = await aplicarCancelamento(pedido.id);
   if (cancelou) await emailPedidoCancelado(pedido.id);
+
+  revalidatePath("/admin/pedidos");
+  revalidatePath(`/admin/pedidos/${numero}`);
+  return { ok: true };
+}
+
+/** Devolve os itens do pedido ao estoque e registra a movimentação (dentro de tx). */
+async function devolverItensAoEstoque(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  pedidoId: string,
+): Promise<void> {
+  await tx.execute(sql`
+    update "produtos_variacoes" as v
+    set estoque = v.estoque + i.quantidade
+    from "pedido_itens" as i
+    where i.variacao_id = v.id and i.pedido_id = ${pedidoId}
+  `);
+  await tx.execute(sql`
+    insert into "estoque_movimentacoes" (variacao_id, tipo, quantidade, estoque_resultante, custo_unitario)
+    select i.variacao_id, 'devolucao', i.quantidade, v.estoque, v.preco_custo
+    from "pedido_itens" as i
+    join "produtos_variacoes" as v on v.id = i.variacao_id
+    where i.pedido_id = ${pedidoId}
+  `);
+}
+
+/**
+ * Aprova o reembolso solicitado pelo cliente: estorna no MP (quando pago via
+ * gateway) e cancela o pedido. Só devolve o estoque se o pedido ainda não foi
+ * retirado; se já foi, marca pendência para o admin devolver manualmente caso a
+ * peça volte. Idempotente pela guarda `reembolso = 'solicitado'`.
+ */
+export async function aprovarReembolso(numero: number): Promise<ResultadoAcao> {
+  await requireAdmin();
+
+  const [pedido] = await db.select().from(pedidos).where(eq(pedidos.numero, numero));
+  if (!pedido) return { ok: false, erro: "Pedido não encontrado." };
+  if (pedido.reembolso !== "solicitado") {
+    return { ok: false, erro: "Não há reembolso pendente para este pedido." };
+  }
+
+  // Estorna no gateway antes de mexer no domínio; se falhar, aborta.
+  if (pedido.gatewayPagamentoId) {
+    try {
+      await estornarPagamento(pedido.gatewayPagamentoId);
+    } catch {
+      return { ok: false, erro: "Falha ao estornar no Mercado Pago. Tente novamente." };
+    }
+  }
+
+  const devolveEstoque = pedido.status !== "retirado";
+
+  const aprovou = await db.transaction(async (tx) => {
+    const atualizados = await tx
+      .update(pedidos)
+      .set({
+        status: "cancelado",
+        reembolso: "aprovado",
+        reembolsoResolvidoEm: new Date(),
+        reembolsoEstoquePendente: !devolveEstoque,
+      })
+      .where(and(eq(pedidos.id, pedido.id), eq(pedidos.reembolso, "solicitado")))
+      .returning({ id: pedidos.id });
+    if (atualizados.length === 0) return false;
+
+    if (devolveEstoque) await devolverItensAoEstoque(tx, pedido.id);
+    return true;
+  });
+
+  if (aprovou) await emailReembolsoAprovado(pedido.id);
+
+  revalidatePath("/admin/pedidos");
+  revalidatePath(`/admin/pedidos/${numero}`);
+  return { ok: true };
+}
+
+/** Recusa o reembolso solicitado. Não move dinheiro nem estoque. */
+export async function recusarReembolso(numero: number): Promise<ResultadoAcao> {
+  await requireAdmin();
+
+  const [pedido] = await db.select().from(pedidos).where(eq(pedidos.numero, numero));
+  if (!pedido) return { ok: false, erro: "Pedido não encontrado." };
+  if (pedido.reembolso !== "solicitado") {
+    return { ok: false, erro: "Não há reembolso pendente para este pedido." };
+  }
+
+  const recusados = await db
+    .update(pedidos)
+    .set({ reembolso: "recusado", reembolsoResolvidoEm: new Date() })
+    .where(and(eq(pedidos.id, pedido.id), eq(pedidos.reembolso, "solicitado")))
+    .returning({ id: pedidos.id });
+
+  if (recusados.length > 0) await emailReembolsoRecusado(pedido.id);
+
+  revalidatePath("/admin/pedidos");
+  revalidatePath(`/admin/pedidos/${numero}`);
+  return { ok: true };
+}
+
+/**
+ * Devolve manualmente ao estoque um pedido reembolsado que foi retirado (a peça
+ * voltou). Idempotente pela guarda `reembolso_estoque_pendente = true`.
+ */
+export async function devolverEstoqueReembolso(numero: number): Promise<ResultadoAcao> {
+  await requireAdmin();
+
+  const [pedido] = await db.select().from(pedidos).where(eq(pedidos.numero, numero));
+  if (!pedido) return { ok: false, erro: "Pedido não encontrado." };
+  if (!pedido.reembolsoEstoquePendente) {
+    return { ok: false, erro: "Não há devolução de estoque pendente." };
+  }
+
+  await db.transaction(async (tx) => {
+    const atualizados = await tx
+      .update(pedidos)
+      .set({ reembolsoEstoquePendente: false })
+      .where(and(eq(pedidos.id, pedido.id), eq(pedidos.reembolsoEstoquePendente, true)))
+      .returning({ id: pedidos.id });
+    if (atualizados.length === 0) return;
+
+    await devolverItensAoEstoque(tx, pedido.id);
+  });
 
   revalidatePath("/admin/pedidos");
   revalidatePath(`/admin/pedidos/${numero}`);

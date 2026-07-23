@@ -245,6 +245,18 @@ export const statusPedido = pgEnum("status_pedido", [
 export const canalVenda = pgEnum("canal_venda", ["online", "pdv"]);
 
 /**
+ * Pedido de reembolso feito pelo cliente. Paralelo à máquina de retirada - um
+ * pedido pode estar `retirado` e ter reembolso `solicitado`. Só o admin aprova;
+ * a aprovação estorna no gateway (quando pago via MP) e cancela o pedido.
+ */
+export const reembolsoStatus = pgEnum("reembolso_status", [
+  "nenhum",
+  "solicitado",
+  "aprovado",
+  "recusado",
+]);
+
+/**
  * Pedido/venda. Online nasce `aguardando_pagamento` reservando estoque; o
  * pagamento o move para `pago`. Venda de balcão (PDV) nasce já `retirado`,
  * baixando o estoque na hora. `expiraEm` só importa no fluxo online.
@@ -273,6 +285,14 @@ export const pedidos = pgTable(
     // Pagamento aprovou depois do pedido expirar (reserva já devolvida): o
     // estoque não pôde ser baixado automaticamente e precisa de revisão manual.
     pendenciaEstoque: boolean("pendencia_estoque").notNull().default(false),
+    // Fluxo de reembolso, ortogonal ao status de retirada.
+    reembolso: reembolsoStatus("reembolso").notNull().default("nenhum"),
+    reembolsoMotivo: text("reembolso_motivo"),
+    reembolsoSolicitadoEm: timestamp("reembolso_solicitado_em", { withTimezone: true }),
+    reembolsoResolvidoEm: timestamp("reembolso_resolvido_em", { withTimezone: true }),
+    // Reembolso aprovado num pedido já retirado: o estoque não voltou
+    // automaticamente e o admin precisa devolver manualmente se a peça retornar.
+    reembolsoEstoquePendente: boolean("reembolso_estoque_pendente").notNull().default(false),
   },
   (t) => ({
     // Varredura de expiração filtra por (status, expiraEm).
