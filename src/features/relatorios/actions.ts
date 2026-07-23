@@ -14,11 +14,6 @@ import { requireAdmin } from "@/lib/auth";
 import { getLojaInfo } from "@/lib/loja";
 
 const STATUS_VENDA: Pedido["status"][] = ["pago", "separando", "pronto_para_retirada", "retirado"];
-const PERIODOS = [7, 30, 90] as const;
-
-export function normalizarDias(diasParam?: string): number {
-  return PERIODOS.includes(Number(diasParam) as (typeof PERIODOS)[number]) ? Number(diasParam) : 30;
-}
 
 function cutoffDe(dias: number): Date {
   return new Date(Date.now() - dias * 86_400_000);
@@ -28,6 +23,8 @@ export interface RelatorioFaturamento {
   total: number;
   vendas: number;
   ticket: number;
+  custo: number;
+  margem: number;
   porDia: { dia: string; vendas: number; total: number }[];
 }
 
@@ -35,20 +32,31 @@ export async function relatorioFaturamento(dias: number): Promise<RelatorioFatur
   await requireAdmin();
   const where = and(inArray(pedidos.status, STATUS_VENDA), gte(pedidos.criadoEm, cutoffDe(dias)));
 
-  const porDia = await db
-    .select({
-      dia: sql<string>`to_char(date_trunc('day', ${pedidos.criadoEm}), 'YYYY-MM-DD')`,
-      vendas: sql<number>`count(*)::int`,
-      total: sql<number>`coalesce(sum(${pedidos.total}), 0)::float`,
-    })
-    .from(pedidos)
-    .where(where)
-    .groupBy(sql`date_trunc('day', ${pedidos.criadoEm})`)
-    .orderBy(desc(sql`date_trunc('day', ${pedidos.criadoEm})`));
+  const [porDia, custoRows] = await Promise.all([
+    db
+      .select({
+        dia: sql<string>`to_char(date_trunc('day', ${pedidos.criadoEm}), 'YYYY-MM-DD')`,
+        vendas: sql<number>`count(*)::int`,
+        total: sql<number>`coalesce(sum(${pedidos.total}), 0)::float`,
+      })
+      .from(pedidos)
+      .where(where)
+      .groupBy(sql`date_trunc('day', ${pedidos.criadoEm})`)
+      .orderBy(desc(sql`date_trunc('day', ${pedidos.criadoEm})`)),
+    db
+      .select({
+        custo: sql<number>`coalesce(sum(coalesce(${produtosVariacoes.precoCusto}, 0) * ${pedidoItens.quantidade}), 0)::float`,
+      })
+      .from(pedidoItens)
+      .innerJoin(pedidos, eq(pedidos.id, pedidoItens.pedidoId))
+      .leftJoin(produtosVariacoes, eq(produtosVariacoes.id, pedidoItens.variacaoId))
+      .where(where),
+  ]);
 
   const total = porDia.reduce((a, d) => a + d.total, 0);
   const vendas = porDia.reduce((a, d) => a + d.vendas, 0);
-  return { total, vendas, ticket: vendas > 0 ? total / vendas : 0, porDia };
+  const custo = custoRows[0]?.custo ?? 0;
+  return { total, vendas, ticket: vendas > 0 ? total / vendas : 0, custo, margem: total - custo, porDia };
 }
 
 export interface LinhaProduto {

@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 import { PageHeader, UrlTabBar } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
 import { formatBRL } from "@/lib/format";
+import { normalizarDias } from "@/lib/periodo";
 import { DashboardPeriodo } from "@/features/dashboard/dashboard-periodo";
 import {
-  normalizarDias,
   relatorioEstoque,
   relatorioFaturamento,
   relatorioPagamentos,
@@ -65,8 +65,10 @@ async function Faturamento({ dias }: { dias: number }) {
   const r = await relatorioFaturamento(dias);
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         <Cartao rotulo="Faturamento" valor={formatBRL(r.total)} />
+        <Cartao rotulo="Custo" valor={formatBRL(r.custo)} />
+        <Cartao rotulo="Margem" valor={formatBRL(r.margem)} />
         <Cartao rotulo="Vendas" valor={String(r.vendas)} />
         <Cartao rotulo="Ticket médio" valor={formatBRL(r.ticket)} />
       </div>
@@ -115,11 +117,13 @@ async function Produtos({ dias }: { dias: number }) {
           <th className={thr}>Faturamento</th>
           <th className={thr}>Custo</th>
           <th className={thr}>Margem</th>
+          <th className={thr}>Margem %</th>
         </>
       }
     >
       {linhas.map((p) => {
         const margem = p.faturamento - p.custo;
+        const margemPct = p.faturamento > 0 ? (margem / p.faturamento) * 100 : 0;
         return (
           <tr key={p.nome}>
             <td className={`${td} font-medium text-ink`}>{p.nome}</td>
@@ -128,6 +132,9 @@ async function Produtos({ dias }: { dias: number }) {
             <td className={`${tdr} text-muted`}>{formatBRL(p.custo)}</td>
             <td className={`${tdr} font-medium ${margem >= 0 ? "text-emerald-600" : "text-red-600"}`}>
               {formatBRL(margem)}
+            </td>
+            <td className={`${tdr} ${margem >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+              {margemPct.toFixed(0)}%
             </td>
           </tr>
         );

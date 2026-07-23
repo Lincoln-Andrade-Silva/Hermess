@@ -1,21 +1,53 @@
-import { BarChart3, Package, Receipt, TrendingUp } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, BarChart3, Package, Receipt, TrendingUp } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { formatBRL } from "@/lib/format";
+import { cn } from "@/lib/cn";
 import { resumoDashboard } from "@/features/dashboard/actions";
 import { DashboardPeriodo } from "@/features/dashboard/dashboard-periodo";
+import { STATUS_LABEL, STATUS_TONE } from "@/features/pedidos/status";
+import { Badge } from "@/components/ui";
 
-export const dynamic = "force-dynamic";
+const METODO_LABEL: Record<string, string> = {
+  online: "Online (MP)",
+  dinheiro: "Dinheiro",
+  pix: "Pix",
+  credito: "Crédito",
+  debito: "Débito",
+  balcao: "Balcão",
+};
+
+function variacao(atual: number, anterior: number): number | null {
+  if (anterior === 0) return atual > 0 ? 100 : null;
+  return ((atual - anterior) / anterior) * 100;
+}
+
+function Delta({ pct }: { pct: number | null }) {
+  if (pct === null) return <span className="text-xs text-muted2">— sem base</span>;
+  const positivo = pct >= 0;
+  const Icone = positivo ? ArrowUpRight : ArrowDownRight;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-0.5 text-xs font-semibold",
+        positivo ? "text-emerald-600" : "text-red-600",
+      )}
+    >
+      <Icone className="h-3.5 w-3.5" />
+      {Math.abs(pct).toFixed(0)}%
+    </span>
+  );
+}
 
 function Kpi({
   icon: Icon,
   rotulo,
   valor,
-  nota,
+  pct,
 }: {
   icon: typeof BarChart3;
   rotulo: string;
   valor: string;
-  nota?: string;
+  pct?: number | null;
 }) {
   return (
     <div className="rounded-2xl border border-line p-5">
@@ -24,10 +56,16 @@ function Kpi({
         <span className="text-[11px] font-bold uppercase tracking-wider">{rotulo}</span>
       </div>
       <p className="mt-2 font-display text-3xl font-extrabold tracking-tight text-ink">{valor}</p>
-      {nota && <p className="text-xs text-muted">{nota}</p>}
+      {pct !== undefined && (
+        <p className="mt-1 flex items-center gap-1.5 text-xs text-muted">
+          <Delta pct={pct} /> vs. período anterior
+        </p>
+      )}
     </div>
   );
 }
+
+export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage({
   searchParams,
@@ -40,6 +78,9 @@ export default async function AdminDashboardPage({
   const maxDia = Math.max(1, ...r.porDia.map((d) => d.total));
   const totalCanais = r.porCanal.online + r.porCanal.pdv;
   const pctOnline = totalCanais > 0 ? (r.porCanal.online / totalCanais) * 100 : 0;
+  const maxMetodo = Math.max(1, ...r.porMetodo.map((m) => m.total));
+  const ticketAnterior =
+    r.vendasAnterior > 0 ? r.faturamentoAnterior / r.vendasAnterior : 0;
 
   return (
     <>
@@ -54,11 +95,41 @@ export default async function AdminDashboardPage({
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Kpi icon={TrendingUp} rotulo="Faturamento" valor={formatBRL(r.faturamento)} />
-        <Kpi icon={Receipt} rotulo="Vendas" valor={String(r.vendas)} />
-        <Kpi icon={BarChart3} rotulo="Ticket médio" valor={formatBRL(r.ticketMedio)} />
+        <Kpi
+          icon={TrendingUp}
+          rotulo="Faturamento"
+          valor={formatBRL(r.faturamento)}
+          pct={variacao(r.faturamento, r.faturamentoAnterior)}
+        />
+        <Kpi
+          icon={Receipt}
+          rotulo="Vendas"
+          valor={String(r.vendas)}
+          pct={variacao(r.vendas, r.vendasAnterior)}
+        />
+        <Kpi
+          icon={BarChart3}
+          rotulo="Ticket médio"
+          valor={formatBRL(r.ticketMedio)}
+          pct={variacao(r.ticketMedio, ticketAnterior)}
+        />
         <Kpi icon={Package} rotulo="Itens vendidos" valor={String(r.itensVendidos)} />
       </div>
+
+      {/* Pedidos por status */}
+      {r.porStatus.length > 0 && (
+        <div className="mt-6 flex flex-wrap gap-2 rounded-2xl border border-line p-4">
+          <span className="mr-1 self-center text-[11px] font-bold uppercase tracking-wider text-muted2">
+            Pedidos
+          </span>
+          {r.porStatus.map((s) => (
+            <span key={s.status} className="inline-flex items-center gap-1.5">
+              <Badge tone={STATUS_TONE[s.status]}>{STATUS_LABEL[s.status]}</Badge>
+              <strong className="text-sm text-ink">{s.quantidade}</strong>
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         {/* Faturamento por dia */}
@@ -85,6 +156,35 @@ export default async function AdminDashboardPage({
           )}
         </div>
 
+        {/* Por método de pagamento */}
+        <div className="rounded-2xl border border-line p-5">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-muted2">
+            Por método de pagamento
+          </p>
+          {r.porMetodo.length === 0 ? (
+            <p className="py-12 text-center text-sm text-muted">Sem vendas no período.</p>
+          ) : (
+            <ul className="mt-4 space-y-3">
+              {r.porMetodo.map((m) => (
+                <li key={m.metodo}>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted">{METODO_LABEL[m.metodo] ?? m.metodo}</span>
+                    <span className="font-semibold text-ink">{formatBRL(m.total)}</span>
+                  </div>
+                  <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-surface">
+                    <div
+                      className="h-full rounded-full bg-ink"
+                      style={{ width: `${(m.total / maxMetodo) * 100}%` }}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.6fr]">
         {/* Por canal */}
         <div className="rounded-2xl border border-line p-5">
           <p className="text-[11px] font-bold uppercase tracking-wider text-muted2">Por canal</p>
@@ -112,31 +212,31 @@ export default async function AdminDashboardPage({
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Ranking de produtos */}
-      <div className="mt-6 rounded-2xl border border-line p-5">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-muted2">
-          Produtos mais vendidos
-        </p>
-        {r.topProdutos.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted">Sem vendas no período.</p>
-        ) : (
-          <ul className="mt-4 divide-y divide-line">
-            {r.topProdutos.map((p, i) => (
-              <li key={p.nome} className="flex items-center gap-4 py-3">
-                <span className="w-5 shrink-0 text-center font-display text-lg font-extrabold text-muted2">
-                  {i + 1}
-                </span>
-                <span className="min-w-0 flex-1 truncate font-medium text-ink">{p.nome}</span>
-                <span className="shrink-0 text-sm text-muted">{p.quantidade} un.</span>
-                <span className="w-24 shrink-0 text-right text-sm font-semibold text-ink">
-                  {formatBRL(p.total)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
+        {/* Ranking de produtos */}
+        <div className="rounded-2xl border border-line p-5">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-muted2">
+            Produtos mais vendidos
+          </p>
+          {r.topProdutos.length === 0 ? (
+            <p className="py-10 text-center text-sm text-muted">Sem vendas no período.</p>
+          ) : (
+            <ul className="mt-3 divide-y divide-line">
+              {r.topProdutos.map((p, i) => (
+                <li key={p.nome} className="flex items-center gap-4 py-2.5">
+                  <span className="w-5 shrink-0 text-center font-display text-lg font-extrabold text-muted2">
+                    {i + 1}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate font-medium text-ink">{p.nome}</span>
+                  <span className="shrink-0 text-sm text-muted">{p.quantidade} un.</span>
+                  <span className="w-24 shrink-0 text-right text-sm font-semibold text-ink">
+                    {formatBRL(p.total)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </>
   );
