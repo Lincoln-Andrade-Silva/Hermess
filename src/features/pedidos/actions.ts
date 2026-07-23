@@ -13,10 +13,11 @@ import {
 } from "@/db/schema";
 import { getCurrentProfile } from "@/lib/auth";
 import { RESERVA_MINUTOS } from "./constants";
-import { emailPedidoCancelado, emailPedidoCriado } from "./emails";
+import { emailPedidoCancelado, emailPedidoCriado, emailReembolsoSolicitado } from "./emails";
 import { selecionarItensComImagem, type ItemComImagem } from "./itens";
 import { aplicarCancelamento } from "./reconciliar";
 import { liberarReservasVencidas } from "./reserva";
+import { REEMBOLSAVEIS } from "./status";
 
 const itemSchema = z.object({
   variacaoId: z.string().uuid(),
@@ -158,6 +159,7 @@ export async function finalizarPedido(input: CheckoutInput): Promise<ResultadoCh
 export interface PedidoComItens {
   numero: number;
   status: Pedido["status"];
+  reembolso: Pedido["reembolso"];
   nome: string;
   telefone: string;
   total: string;
@@ -182,6 +184,7 @@ export async function buscarMeuPedido(numero: number): Promise<PedidoComItens | 
   return {
     numero: pedido.numero,
     status: pedido.status,
+    reembolso: pedido.reembolso,
     nome: pedido.nome,
     telefone: pedido.telefone,
     total: pedido.total,
@@ -238,5 +241,57 @@ export async function cancelarMeuPedido(numero: number): Promise<{ ok: boolean; 
 
   const cancelou = await aplicarCancelamento(pedido.id);
   if (cancelou) await emailPedidoCancelado(pedido.id);
+  return { ok: true };
+}
+
+const reembolsoSchema = z.object({
+  motivo: z.string().trim().max(500).optional().default(""),
+});
+
+export type SolicitarReembolsoInput = z.input<typeof reembolsoSchema>;
+
+/**
+ * Cliente solicita reembolso do próprio pedido. Permitido só a partir de pago
+ * (antes disso, o caminho é cancelar). Não move dinheiro: registra a
+ * solicitação para o admin aprovar ou recusar. Pode repetir após uma recusa.
+ */
+export async function solicitarReembolso(
+  numero: number,
+  input: SolicitarReembolsoInput,
+): Promise<{ ok: boolean; erro?: string }> {
+  const profile = await getCurrentProfile();
+
+  const parsed = reembolsoSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, erro: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+  const motivo = parsed.data.motivo.trim();
+
+  const [pedido] = await db
+    .select()
+    .from(pedidos)
+    .where(and(eq(pedidos.numero, numero), eq(pedidos.clienteId, profile.id)));
+  if (!pedido) return { ok: false, erro: "Pedido não encontrado." };
+  if (!REEMBOLSAVEIS.includes(pedido.status)) {
+    return { ok: false, erro: "Reembolso disponível apenas após o pagamento." };
+  }
+  if (pedido.reembolso === "solicitado") {
+    return { ok: false, erro: "Já existe uma solicitação de reembolso em análise." };
+  }
+  if (pedido.reembolso === "aprovado") {
+    return { ok: false, erro: "Este pedido já foi reembolsado." };
+  }
+
+  await db
+    .update(pedidos)
+    .set({
+      reembolso: "solicitado",
+      reembolsoMotivo: motivo || null,
+      reembolsoSolicitadoEm: new Date(),
+      reembolsoResolvidoEm: null,
+    })
+    .where(and(eq(pedidos.id, pedido.id), eq(pedidos.clienteId, profile.id)));
+
+  await emailReembolsoSolicitado(pedido.id, motivo);
   return { ok: true };
 }

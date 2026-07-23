@@ -270,3 +270,78 @@ export async function emailPedidoCancelado(pedidoId: string): Promise<void> {
     });
   });
 }
+
+/** Bloco de citação para exibir o motivo informado pelo cliente. */
+function citacao(texto: string): string {
+  return `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 8px;">
+      <tr>
+        <td style="padding:12px 16px;background:#fafafa;border-left:3px solid ${INK};border-radius:0 8px 8px 0;font-size:14px;line-height:1.6;color:#52525b;">
+          ${escapeHtml(texto)}
+        </td>
+      </tr>
+    </table>`;
+}
+
+/** Cliente pediu reembolso: notifica a loja para aprovar ou recusar. */
+export async function emailReembolsoSolicitado(pedidoId: string, motivo: string): Promise<void> {
+  await disparar(async () => {
+    const ctx = await carregar(pedidoId);
+    if (!ctx) return;
+    const { pedido, marca, baseUrl } = ctx;
+
+    await enviarEmail({
+      to: marca.emailEmpresa ?? "",
+      fromName: marca.nome,
+      subject: `Reembolso solicitado - pedido #${pedido.numero}`,
+      html: layout(marca, {
+        titulo: `Reembolso solicitado - #${pedido.numero}`,
+        intro: `${escapeHtml(pedido.nome)} solicitou o reembolso do pedido <strong>#${pedido.numero}</strong> (${formatBRL(pedido.total)}). Aprove ou recuse no painel.`,
+        corpo: motivo.trim() ? citacao(motivo) : undefined,
+        cta: baseUrl
+          ? botao(`${baseUrl}/admin/pedidos/${pedido.numero}`, "Abrir no painel")
+          : undefined,
+      }),
+    });
+  });
+}
+
+/** Reembolso aprovado pela loja. */
+export async function emailReembolsoAprovado(pedidoId: string): Promise<void> {
+  await disparar(async () => {
+    const ctx = await carregar(pedidoId);
+    if (!ctx) return;
+    const { pedido, marca, baseUrl } = ctx;
+
+    await enviarEmail({
+      to: pedido.emailCliente ?? "",
+      fromName: marca.nome,
+      subject: `Reembolso aprovado - pedido #${pedido.numero}`,
+      html: layout(marca, {
+        titulo: "Reembolso aprovado",
+        intro: `O reembolso do pedido <strong>#${pedido.numero}</strong> foi aprovado. Se o pagamento foi pelo Mercado Pago, o estorno já foi solicitado e cai na fatura em alguns dias.`,
+        cta: baseUrl ? botao(`${baseUrl}/pedido/${pedido.numero}`, "Ver meu pedido") : undefined,
+      }),
+    });
+  });
+}
+
+/** Reembolso recusado pela loja. */
+export async function emailReembolsoRecusado(pedidoId: string): Promise<void> {
+  await disparar(async () => {
+    const ctx = await carregar(pedidoId);
+    if (!ctx) return;
+    const { pedido, marca, baseUrl } = ctx;
+
+    await enviarEmail({
+      to: pedido.emailCliente ?? "",
+      fromName: marca.nome,
+      subject: `Sobre o reembolso do pedido #${pedido.numero}`,
+      html: layout(marca, {
+        titulo: "Reembolso não aprovado",
+        intro: `Analisamos o pedido de reembolso do <strong>#${pedido.numero}</strong> e ele não foi aprovado. Fale com a loja se tiver dúvidas.`,
+        cta: baseUrl ? botao(`${baseUrl}/pedido/${pedido.numero}`, "Ver meu pedido") : undefined,
+      }),
+    });
+  });
+}

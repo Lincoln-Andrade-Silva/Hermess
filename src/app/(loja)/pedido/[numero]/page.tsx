@@ -4,10 +4,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { CheckCircle2 } from "lucide-react";
 import { formatBRL, formatDataHora } from "@/lib/format";
+import { getLojaInfo } from "@/lib/loja";
+import { linkWhatsApp } from "@/lib/whatsapp";
 import { Badge } from "@/components/ui";
+import { WhatsAppIcon } from "@/components/icons/whatsapp";
 import { buscarMeuPedido } from "@/features/pedidos/actions";
 import { BotaoPagar } from "@/features/pedidos/botao-pagar";
-import { STATUS_LABEL, STATUS_TONE } from "@/features/pedidos/status";
+import { BotaoReembolso } from "@/features/pedidos/botao-reembolso";
+import { REEMBOLSAVEIS, STATUS_LABEL, STATUS_TONE } from "@/features/pedidos/status";
+
+/** Status em que faz sentido combinar a retirada pelo WhatsApp. */
+const STATUS_RETIRADA = ["pago", "separando", "pronto_para_retirada"];
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +28,19 @@ export default async function PedidoPage({ params }: { params: { numero: string 
   if (!pedido) notFound();
 
   const aguardando = pedido.status === "aguardando_pagamento";
+
+  const loja = await getLojaInfo();
+  const whatsappRetirada =
+    loja?.telefone && STATUS_RETIRADA.includes(pedido.status)
+      ? linkWhatsApp(
+          loja.telefone,
+          `Olá! Gostaria de combinar a retirada do meu pedido #${pedido.numero}.`,
+        )
+      : null;
+
+  const podeReembolsar =
+    REEMBOLSAVEIS.includes(pedido.status) &&
+    (pedido.reembolso === "nenhum" || pedido.reembolso === "recusado");
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 sm:py-14">
@@ -94,7 +114,42 @@ export default async function PedidoPage({ params }: { params: { numero: string 
         <p className="mt-1 text-ink">{pedido.nome}</p>
         <p className="text-muted">{pedido.telefone}</p>
         <p className="mt-2 text-xs text-muted2">Feito em {formatDataHora(pedido.criadoEm)}</p>
+
+        {whatsappRetirada && (
+          <a
+            href={whatsappRetirada}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+          >
+            <WhatsAppIcon className="h-4 w-4" />
+            Combinar retirada pelo WhatsApp
+          </a>
+        )}
       </div>
+
+      {pedido.reembolso === "solicitado" && (
+        <p className="mt-6 rounded-xl border border-amber-600/20 bg-amber-50 px-4 py-3 text-center text-sm text-amber-800">
+          Recebemos seu pedido de reembolso. A loja vai analisar e você será avisado por e-mail.
+        </p>
+      )}
+      {pedido.reembolso === "aprovado" && (
+        <p className="mt-6 rounded-xl border border-emerald-600/20 bg-emerald-50 px-4 py-3 text-center text-sm text-emerald-800">
+          Reembolso aprovado. Se o pagamento foi pelo Mercado Pago, o estorno cai na fatura em alguns
+          dias.
+        </p>
+      )}
+      {pedido.reembolso === "recusado" && (
+        <p className="mt-6 rounded-xl border border-red-600/20 bg-red-50 px-4 py-3 text-center text-sm text-red-800">
+          Seu pedido de reembolso não foi aprovado. Fale com a loja se tiver dúvidas.
+        </p>
+      )}
+
+      {podeReembolsar && (
+        <div className="mt-4">
+          <BotaoReembolso numero={pedido.numero} />
+        </div>
+      )}
 
       <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:justify-center">
         <Link

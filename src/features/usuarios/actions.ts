@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { and, count, desc, eq, ilike, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { profiles, type Profile } from "@/db/schema";
+import { pedidos, profiles, type Profile } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { offsetDaPagina, PAGE_SIZE, parsePagina, totalPaginas } from "@/lib/pagination";
 import { getServiceRoleKey, getSupabaseUrl } from "@/lib/supabase/config";
@@ -128,6 +128,13 @@ export async function criarUsuario(input: NovoUsuarioInput): Promise<ResultadoAc
 
 const usuarioSchema = z.object({
   nome: z.string().trim().min(2, "Nome muito curto.").max(120),
+  email: z.string().trim().email("E-mail inválido."),
+  telefone: z
+    .string()
+    .trim()
+    .max(30)
+    .transform((v) => v || null)
+    .nullable(),
   tipo: z.enum(TIPOS),
   status: z.enum(STATUS),
 });
@@ -141,17 +148,76 @@ export async function atualizarUsuario(id: string, input: UsuarioInput): Promise
   if (!parsed.success) {
     return { ok: false, erro: parsed.error.issues[0]?.message ?? "Dados inválidos." };
   }
-  const dados = parsed.data;
+  const { nome, email, telefone, tipo, status } = parsed.data;
 
   // Evita o admin se trancar para fora tirando o próprio acesso.
-  if (id === admin.id && (dados.tipo !== "admin" || dados.status !== "ativo")) {
+  if (id === admin.id && (tipo !== "admin" || status !== "ativo")) {
     return { ok: false, erro: "Você não pode remover o próprio acesso de admin." };
+  }
+
+  const [atual] = await db.select({ email: profiles.email }).from(profiles).where(eq(profiles.id, id));
+  if (!atual) return { ok: false, erro: "Usuário não encontrado." };
+
+  // E-mail vive no Auth; sincroniza lá antes de refletir no profile.
+  const emailMudou = email.toLowerCase() !== atual.email.toLowerCase();
+  if (emailMudou) {
+    const url = getSupabaseUrl();
+    const serviceKey = getServiceRoleKey();
+    if (!url || !serviceKey) return { ok: false, erro: "Servidor mal configurado." };
+
+    const supabase = createClient(url, serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    const { error } = await supabase.auth.admin.updateUserById(id, { email, email_confirm: true });
+    if (error) {
+      const jaExiste = error.status === 422 || /already|registered/i.test(error.message);
+      return { ok: false, erro: jaExiste ? "E-mail já cadastrado." : "Não foi possível salvar o e-mail." };
+    }
   }
 
   await db
     .update(profiles)
-    .set({ ...dados, atualizadoEm: new Date() })
+    .set({ nome, email, telefone, tipo, status, atualizadoEm: new Date() })
     .where(eq(profiles.id, id));
+
+  revalidatePath("/admin/usuarios");
+  return { ok: true };
+}
+
+/**
+ * Exclui um usuário. Bloqueia se ele for o próprio admin ou tiver pedidos
+ * vinculados (a FK é `restrict` para preservar o histórico de vendas — nesse
+ * caso o admin deve inativar). Remove o usuário no Auth; o profile cai por
+ * cascata (`profiles.id -> auth.users ON DELETE CASCADE`).
+ */
+export async function excluirUsuario(id: string): Promise<ResultadoAcao> {
+  const admin = await requireAdmin();
+
+  if (id === admin.id) {
+    return { ok: false, erro: "Você não pode excluir a própria conta." };
+  }
+
+  const [{ total }] = await db
+    .select({ total: count() })
+    .from(pedidos)
+    .where(eq(pedidos.clienteId, id));
+  if (total > 0) {
+    return {
+      ok: false,
+      erro: `Usuário tem ${total} pedido(s). Inative em vez de excluir para preservar o histórico.`,
+    };
+  }
+
+  const url = getSupabaseUrl();
+  const serviceKey = getServiceRoleKey();
+  if (!url || !serviceKey) return { ok: false, erro: "Servidor mal configurado." };
+
+  const supabase = createClient(url, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { error } = await supabase.auth.admin.deleteUser(id);
+  if (error) return { ok: false, erro: "Não foi possível excluir." };
 
   revalidatePath("/admin/usuarios");
   return { ok: true };

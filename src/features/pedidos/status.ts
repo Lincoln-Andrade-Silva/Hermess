@@ -1,7 +1,7 @@
 import type { Pedido } from "@/db/schema";
 
 type StatusPedido = Pedido["status"];
-type Tone = "success" | "warning" | "muted" | "danger" | "brand";
+type Tone = "success" | "warning" | "muted" | "danger" | "brand" | "info" | "purple" | "dark";
 
 export const STATUS_LABEL: Record<StatusPedido, string> = {
   aguardando_pagamento: "Aguardando pagamento",
@@ -16,9 +16,9 @@ export const STATUS_LABEL: Record<StatusPedido, string> = {
 export const STATUS_TONE: Record<StatusPedido, Tone> = {
   aguardando_pagamento: "warning",
   pago: "success",
-  separando: "brand",
-  pronto_para_retirada: "brand",
-  retirado: "muted",
+  separando: "info",
+  pronto_para_retirada: "purple",
+  retirado: "dark",
   cancelado: "danger",
   expirado: "muted",
 };
@@ -44,3 +44,27 @@ export const CANCELAVEIS: StatusPedido[] = [
   "separando",
   "pronto_para_retirada",
 ];
+
+/** Status em que o cliente pode solicitar reembolso (só a partir de pago). */
+export const REEMBOLSAVEIS: StatusPedido[] = [
+  "pago",
+  "separando",
+  "pronto_para_retirada",
+  "retirado",
+];
+
+type StatusReembolso = Pedido["reembolso"];
+
+export const REEMBOLSO_LABEL: Record<StatusReembolso, string> = {
+  nenhum: "",
+  solicitado: "Reembolso solicitado",
+  aprovado: "Reembolso aprovado",
+  recusado: "Reembolso recusado",
+};
+
+export const REEMBOLSO_TONE: Record<StatusReembolso, Tone> = {
+  nenhum: "muted",
+  solicitado: "warning",
+  aprovado: "success",
+  recusado: "danger",
+};

@@ -8,7 +8,7 @@ import { AlertTriangle, Eye, Trash2 } from "lucide-react";
 import { Badge, ConfirmModal, DataTableServer, UrlSelect } from "@/components/ui";
 import { formatBRL, formatData } from "@/lib/format";
 import { excluirPedido } from "./admin-actions";
-import { STATUS_LABEL, STATUS_TONE } from "./status";
+import { REEMBOLSO_LABEL, REEMBOLSO_TONE, STATUS_LABEL, STATUS_TONE } from "./status";
 import type { ListagemPedidos, PedidoLinha } from "./admin-actions";
 
 const STATUS_OPTIONS = [
@@ -24,6 +24,9 @@ function StatusCelula({ pedido }: { pedido: PedidoLinha }) {
     <div className="flex items-center gap-1.5">
       <Badge tone={STATUS_TONE[pedido.status]}>{STATUS_LABEL[pedido.status]}</Badge>
       {pedido.canal === "pdv" && <Badge tone="muted">Balcão</Badge>}
+      {pedido.reembolso === "solicitado" && (
+        <Badge tone={REEMBOLSO_TONE.solicitado}>{REEMBOLSO_LABEL.solicitado}</Badge>
+      )}
       {pedido.pendenciaEstoque && (
         <AlertTriangle className="h-4 w-4 text-amber-600" aria-label="Pendência de estoque" />
       )}

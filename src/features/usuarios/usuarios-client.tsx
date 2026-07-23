@@ -3,10 +3,11 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Pencil, Plus } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import {
   Badge,
   Button,
+  ConfirmModal,
   DataTableServer,
   Field,
   FormError,
@@ -16,8 +17,14 @@ import {
   Toggle,
   UrlSelect,
 } from "@/components/ui";
-import { formatData } from "@/lib/format";
-import { atualizarUsuario, criarUsuario, type LinhaUsuario, type ListagemUsuarios } from "./actions";
+import { formatData, maskTelefone } from "@/lib/format";
+import {
+  atualizarUsuario,
+  criarUsuario,
+  excluirUsuario,
+  type LinhaUsuario,
+  type ListagemUsuarios,
+} from "./actions";
 
 function CriarUsuario() {
   const router = useRouter();
@@ -125,6 +132,8 @@ function EditarUsuario({ usuario }: { usuario: LinhaUsuario }) {
   const router = useRouter();
   const [aberto, setAberto] = useState(false);
   const [nome, setNome] = useState(usuario.nome);
+  const [email, setEmail] = useState(usuario.email);
+  const [telefone, setTelefone] = useState(maskTelefone(usuario.telefone ?? ""));
   const [tipo, setTipo] = useState<LinhaUsuario["tipo"]>(usuario.tipo);
   const [ativo, setAtivo] = useState(usuario.status === "ativo");
   const [erro, setErro] = useState<string | null>(null);
@@ -135,6 +144,8 @@ function EditarUsuario({ usuario }: { usuario: LinhaUsuario }) {
     iniciar(async () => {
       const r = await atualizarUsuario(usuario.id, {
         nome,
+        email,
+        telefone: telefone.trim() || null,
         tipo,
         status: ativo ? "ativo" : "inativo",
       });
@@ -160,16 +171,29 @@ function EditarUsuario({ usuario }: { usuario: LinhaUsuario }) {
 
       <Modal open={aberto} onClose={() => setAberto(false)} title="Editar usuário" className="max-w-md">
         <div className="space-y-5">
-          <div className="rounded-xl bg-surface/50 p-3 text-sm">
-            <p className="font-medium text-ink">{usuario.email}</p>
-            <p className="text-xs text-muted">
-              Cadastrado em {formatData(usuario.criadoEm)}
-              {usuario.telefone ? ` · ${usuario.telefone}` : ""}
-            </p>
-          </div>
-
           <Field label="Nome" htmlFor="usr-nome">
             <Input id="usr-nome" value={nome} onChange={(e) => setNome(e.target.value)} maxLength={120} />
+          </Field>
+
+          <Field label="E-mail" htmlFor="usr-email">
+            <Input
+              id="usr-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="off"
+            />
+          </Field>
+
+          <Field label="Telefone" htmlFor="usr-telefone" hint="(opcional)">
+            <Input
+              id="usr-telefone"
+              value={telefone}
+              onChange={(e) => setTelefone(maskTelefone(e.target.value))}
+              placeholder="(00) 00000-0000"
+              inputMode="tel"
+              maxLength={16}
+            />
           </Field>
 
           <Field label="Tipo" htmlFor="usr-tipo">
@@ -203,6 +227,62 @@ function EditarUsuario({ usuario }: { usuario: LinhaUsuario }) {
           </div>
         </div>
       </Modal>
+    </>
+  );
+}
+
+function ExcluirUsuario({ usuario }: { usuario: LinhaUsuario }) {
+  const router = useRouter();
+  const [aberto, setAberto] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [excluindo, iniciar] = useTransition();
+
+  function abrir() {
+    setErro(null);
+    setAberto(true);
+  }
+
+  function confirmar() {
+    setErro(null);
+    iniciar(async () => {
+      const r = await excluirUsuario(usuario.id);
+      if (!r.ok) {
+        setErro(r.erro ?? "Não foi possível excluir.");
+        return;
+      }
+      setAberto(false);
+      router.refresh();
+    });
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={abrir}
+        aria-label={`Excluir ${usuario.nome}`}
+        className="rounded-lg p-2 text-muted transition hover:bg-red-50 hover:text-red-600"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+
+      <ConfirmModal
+        open={aberto}
+        onClose={() => setAberto(false)}
+        onConfirm={confirmar}
+        title="Excluir usuário"
+        confirmLabel="Excluir"
+        loading={excluindo}
+        message={
+          <div className="space-y-3">
+            <p>
+              Excluir <span className="font-medium text-ink">{usuario.nome}</span>? Esta ação não
+              pode ser desfeita.
+            </p>
+            {erro && <FormError>{erro}</FormError>}
+          </div>
+        }
+      />
     </>
   );
 }
@@ -256,8 +336,9 @@ const columns: ColumnDef<LinhaUsuario>[] = [
     id: "acoes",
     header: "",
     cell: ({ row }) => (
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-1">
         <EditarUsuario usuario={row.original} />
+        <ExcluirUsuario usuario={row.original} />
       </div>
     ),
   },
@@ -293,7 +374,10 @@ export function UsuariosClient({ lista }: { lista: ListagemUsuarios }) {
               )}
             </div>
           </div>
-          <EditarUsuario usuario={u} />
+          <div className="flex shrink-0 gap-1">
+            <EditarUsuario usuario={u} />
+            <ExcluirUsuario usuario={u} />
+          </div>
         </div>
       )}
     />
