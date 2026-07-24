@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Modal } from "./modal";
-import { Input } from "./input";
 import { Label } from "./field";
+import { SpectrumPicker } from "./spectrum-picker";
 
 /**
  * Paleta de partida. Cobre o que aparece na maioria dos catálogos sem obrigar
@@ -33,8 +33,6 @@ const PALETA: { nome: string; hex: string }[] = [
   { nome: "Caramelo", hex: "#a9682f" },
 ];
 
-const HEX_VALIDO = /^#[0-9a-fA-F]{6}$/;
-
 export function ColorPicker({
   value,
   onChange,
@@ -45,20 +43,10 @@ export function ColorPicker({
   rotulo?: string;
 }) {
   const [aberto, setAberto] = useState(false);
-  const [hexManual, setHexManual] = useState(value);
-
-  function abrir() {
-    setHexManual(value);
-    setAberto(true);
-  }
 
   function escolher(hex: string) {
     onChange(hex);
     setAberto(false);
-  }
-
-  function confirmarManual() {
-    if (HEX_VALIDO.test(hexManual)) escolher(hexManual);
   }
 
   const nomeAtual = PALETA.find((c) => c.hex.toLowerCase() === value.toLowerCase())?.nome;
@@ -67,7 +55,7 @@ export function ColorPicker({
     <>
       <button
         type="button"
-        onClick={abrir}
+        onClick={() => setAberto(true)}
         aria-label={rotulo ? `Escolher cor de ${rotulo}` : "Escolher cor"}
         className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-lg border border-line bg-surface transition hover:border-line2"
       >
@@ -115,35 +103,28 @@ export function ColorPicker({
             })}
           </div>
 
-          <div className="space-y-2 border-t border-line pt-4">
-            <Label htmlFor="cor-hex">Outra cor</Label>
-            <div className="flex items-center gap-2">
-              <span
-                aria-hidden
-                style={{ backgroundColor: HEX_VALIDO.test(hexManual) ? hexManual : "transparent" }}
-                className="h-[50px] w-[50px] shrink-0 rounded-lg border border-line"
-              />
-              <Input
-                id="cor-hex"
-                value={hexManual}
-                onChange={(e) => setHexManual(e.target.value)}
-                onBlur={confirmarManual}
-                onKeyDown={(e) => e.key === "Enter" && confirmarManual()}
-                placeholder="#111111"
-                spellCheck={false}
-                className="font-mono"
-              />
+          <div className="space-y-3 border-t border-line pt-4">
+            <Label>Outra cor</Label>
+            <SpectrumPicker value={value} onChange={onChange} />
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-2 text-xs text-muted">
+                <span
+                  aria-hidden
+                  style={{ backgroundColor: value }}
+                  className="h-5 w-5 rounded-full border border-line2"
+                />
+                <span className="font-mono">{value.toUpperCase()}</span>
+                {nomeAtual && <strong className="text-ink">{nomeAtual}</strong>}
+              </span>
+              <button
+                type="button"
+                onClick={() => setAberto(false)}
+                className="rounded-lg bg-brand px-4 py-2 text-sm font-bold text-brand-fg transition hover:bg-brand-dark"
+              >
+                Concluir
+              </button>
             </div>
-            {hexManual.trim() !== "" && !HEX_VALIDO.test(hexManual) && (
-              <p className="text-xs text-red-600">Use o formato #RRGGBB.</p>
-            )}
           </div>
-
-          {nomeAtual && (
-            <p className="text-xs text-muted">
-              Selecionada: <strong className="text-ink">{nomeAtual}</strong>
-            </p>
-          )}
         </div>
       </Modal>
     </>

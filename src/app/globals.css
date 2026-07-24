@@ -25,6 +25,17 @@
   --c-brand-light: 64 64 64;
   --c-brand-dark: 0 0 0;
 
+  /* Estados de feedback (claro por padrão; o escopo escuro sobrescreve). */
+  --fb-danger-surface: #fef2f2;
+  --fb-danger-line: #fecaca;
+  --fb-danger-ink: #b91c1c;
+  --fb-success-surface: #ecfdf5;
+  --fb-success-line: #a7f3d0;
+  --fb-success-ink: #047857;
+  --fb-warning-surface: #fffbeb;
+  --fb-warning-line: #fde68a;
+  --fb-warning-ink: #92400e;
+
   --font-sans: var(--font-dm-sans);
   --font-display: var(--font-barlow-condensed);
 }

@@ -227,3 +227,46 @@ export function paletaDeSelecao(tema: ModoTema, cores: CoresBase): PaletaTema {
   if (tema === "personalizado") return derivarPaleta(cores);
   return PALETA_CLARA;
 }
+
+/**
+ * Cores dos estados de feedback (erro, sucesso, aviso) por esquema. São tokens à
+ * parte da paleta: não dependem das cinco cores escolhidas - vermelho continua
+ * vermelho no tema personalizado -, só precisam de uma variante escura legível
+ * sobre fundo escuro. Cada um traz fundo, borda e texto.
+ */
+const FEEDBACK: Record<"light" | "dark", Record<string, string>> = {
+  light: {
+    "--fb-danger-surface": "#fef2f2",
+    "--fb-danger-line": "#fecaca",
+    "--fb-danger-ink": "#b91c1c",
+    "--fb-success-surface": "#ecfdf5",
+    "--fb-success-line": "#a7f3d0",
+    "--fb-success-ink": "#047857",
+    "--fb-warning-surface": "#fffbeb",
+    "--fb-warning-line": "#fde68a",
+    "--fb-warning-ink": "#92400e",
+  },
+  dark: {
+    "--fb-danger-surface": "#2a1618",
+    "--fb-danger-line": "#5c2b2f",
+    "--fb-danger-ink": "#fca5a5",
+    "--fb-success-surface": "#0f241d",
+    "--fb-success-line": "#1f4d3c",
+    "--fb-success-ink": "#6ee7b7",
+    "--fb-warning-surface": "#271d0c",
+    "--fb-warning-line": "#4a3a18",
+    "--fb-warning-ink": "#fcd34d",
+  },
+};
+
+/** Mapa dos tokens de feedback, para style inline (preview) e live-apply. */
+export function varsDeFeedback(esquema: "light" | "dark"): Record<string, string> {
+  return FEEDBACK[esquema];
+}
+
+/** Declarações de feedback prontas para injetar num bloco `:root`. */
+export function declaracoesDeFeedback(esquema: "light" | "dark"): string {
+  return Object.entries(FEEDBACK[esquema])
+    .map(([nome, valor]) => `${nome}:${valor}`)
+    .join(";");
+}

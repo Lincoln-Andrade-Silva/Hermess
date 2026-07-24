@@ -34,7 +34,7 @@ export function Field({ label, htmlFor, hint, error, children }: FieldProps) {
 
 export function FormError({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-xl border border-red-600/20 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+    <p className="rounded-xl border border-danger-line bg-danger-surface px-4 py-3 text-sm font-medium text-danger-ink">
       {children}
     </p>
   );
@@ -42,7 +42,7 @@ export function FormError({ children }: { children: React.ReactNode }) {
 
 export function FormSuccess({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-xl border border-emerald-600/20 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+    <p className="rounded-xl border border-success-line bg-success-surface px-4 py-3 text-sm font-medium text-success-ink">
       {children}
     </p>
   );

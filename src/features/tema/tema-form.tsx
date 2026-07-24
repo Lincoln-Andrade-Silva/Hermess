@@ -23,11 +23,13 @@ import {
   hexValido,
   paletaDeSelecao,
   varsDeCor,
+  varsDeFeedback,
   type CoresBase,
   type EscopoTema,
   type ModoTema,
 } from "@/lib/tema";
 import { salvarTemaConfig } from "./actions";
+import { PreviewPainel } from "./preview-painel";
 import { PreviewVitrine } from "./preview-vitrine";
 
 const TEMAS: { value: ModoTema; label: string }[] = [
@@ -82,7 +84,13 @@ export function TemaForm({
   const [fonteTitulo, setFonteTitulo] = useState(config?.fonteTitulo ?? FONTES_TITULO[0].chave);
 
   const paleta = useMemo(() => paletaDeSelecao(tema, cores), [tema, cores]);
-  const varsCor = useMemo(() => varsDeCor(paleta), [paleta]);
+  const esquema = esquemaDeCor(paleta);
+  // Preview e live-apply carregam cor + feedback juntos, senão os chips de estado
+  // no preview usariam o esquema do painel em volta, não o do tema em edição.
+  const varsPreview = useMemo(
+    () => ({ ...varsDeCor(paleta), ...varsDeFeedback(esquema) }),
+    [paleta, esquema],
+  );
   const fonteCorpoVar = variavelDaFonte(fonteCorpo, FONTES_CORPO);
   const fonteTituloVar = variavelDaFonte(fonteTitulo, FONTES_TITULO);
 
@@ -93,8 +101,8 @@ export function TemaForm({
     if (escopo !== "admin") return;
     const root = document.documentElement;
     const overrides: Record<string, string> = {
-      ...varsCor,
-      "color-scheme": esquemaDeCor(paleta),
+      ...varsPreview,
+      "color-scheme": esquema,
       "--font-sans": `var(${fonteCorpoVar})`,
       "--font-display": `var(${fonteTituloVar})`,
     };
@@ -102,7 +110,7 @@ export function TemaForm({
     return () => {
       for (const prop of Object.keys(overrides)) root.style.removeProperty(prop);
     };
-  }, [escopo, paleta, varsCor, fonteCorpoVar, fonteTituloVar]);
+  }, [escopo, esquema, varsPreview, fonteCorpoVar, fonteTituloVar]);
 
   function trocarCor(chave: keyof CoresBase, hex: string) {
     setCores((atual) => ({ ...atual, [chave]: hex }));
@@ -187,9 +195,9 @@ export function TemaForm({
       </Field>
 
       {avisosDeContraste.length > 0 && (
-        <div className="space-y-1.5 rounded-xl border border-amber-600/30 bg-amber-50 px-4 py-3">
+        <div className="space-y-1.5 rounded-xl border border-warning-line bg-warning-surface px-4 py-3">
           {avisosDeContraste.map((aviso) => (
-            <p key={aviso} className="flex gap-2 text-sm text-amber-800">
+            <p key={aviso} className="flex gap-2 text-sm text-warning-ink">
               <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
               {aviso}
             </p>
@@ -213,26 +221,34 @@ export function TemaForm({
     </div>
   );
 
-  // Vitrine: o admin não a vê ao vivo, então acompanha a miniatura ao lado.
-  // Painel: o próprio painel muda ao vivo, o preview seria redundante.
-  if (escopo === "vitrine") {
-    return (
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-        <div className="max-w-2xl">{controles}</div>
-        <div className="lg:sticky lg:top-6 lg:self-start">
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted">
-            Prévia da vitrine
-          </p>
-          <PreviewVitrine
-            vars={varsCor}
-            fonteCorpoVar={fonteCorpoVar}
-            fonteTituloVar={fonteTituloVar}
-            nomeLoja={nomeLoja}
-          />
-        </div>
-      </div>
+  // Cada escopo tem a sua miniatura: a vitrine porque o admin não a vê ao vivo,
+  // o painel para servir de recorte estável enquanto o painel real muda em volta.
+  const preview =
+    escopo === "vitrine" ? (
+      <PreviewVitrine
+        vars={varsPreview}
+        fonteCorpoVar={fonteCorpoVar}
+        fonteTituloVar={fonteTituloVar}
+        nomeLoja={nomeLoja}
+      />
+    ) : (
+      <PreviewPainel
+        vars={varsPreview}
+        fonteCorpoVar={fonteCorpoVar}
+        fonteTituloVar={fonteTituloVar}
+        nomeLoja={nomeLoja}
+      />
     );
-  }
 
-  return <div className="max-w-2xl">{controles}</div>;
+  return (
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+      <div className="max-w-2xl">{controles}</div>
+      <div className="lg:sticky lg:top-6 lg:self-start">
+        <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted">
+          {escopo === "vitrine" ? "Prévia da vitrine" : "Prévia do painel"}
+        </p>
+        {preview}
+      </div>
+    </div>
+  );
 }

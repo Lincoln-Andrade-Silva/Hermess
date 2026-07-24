@@ -1,20 +1,20 @@
 import {
+  Abril_Fatface,
   Anton,
-  Archivo_Narrow,
+  Archivo_Black,
   Barlow_Condensed,
   Bebas_Neue,
   DM_Sans,
-  Figtree,
   Fjalla_One,
+  Fraunces,
   Inter,
-  Karla,
-  Manrope,
+  Lora,
+  Nunito,
   Oswald,
-  Rubik,
-  Saira_Condensed,
-  Source_Sans_3,
-  Teko,
-  Work_Sans,
+  Playfair_Display,
+  Poppins,
+  Roboto_Slab,
+  Space_Grotesk,
 } from "next/font/google";
 import { FONTES_CORPO, FONTES_TITULO } from "./fontes";
 
@@ -29,13 +29,17 @@ import { FONTES_CORPO, FONTES_TITULO } from "./fontes";
  * sem eixo variável exigem `weight` explícito.
  */
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-poppins",
+});
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
-const figtree = Figtree({ subsets: ["latin"], variable: "--font-figtree" });
-const workSans = Work_Sans({ subsets: ["latin"], variable: "--font-work-sans" });
-const sourceSans = Source_Sans_3({ subsets: ["latin"], variable: "--font-source-sans" });
-const rubik = Rubik({ subsets: ["latin"], variable: "--font-rubik" });
-const karla = Karla({ subsets: ["latin"], variable: "--font-karla" });
+const lora = Lora({ subsets: ["latin"], variable: "--font-lora" });
+const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
+const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito" });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });
+const robotoSlab = Roboto_Slab({ subsets: ["latin"], variable: "--font-roboto-slab" });
 
 const barlowCondensed = Barlow_Condensed({
   subsets: ["latin"],
@@ -45,26 +49,30 @@ const barlowCondensed = Barlow_Condensed({
 const oswald = Oswald({ subsets: ["latin"], variable: "--font-oswald" });
 const bebasNeue = Bebas_Neue({ subsets: ["latin"], weight: "400", variable: "--font-bebas-neue" });
 const anton = Anton({ subsets: ["latin"], weight: "400", variable: "--font-anton" });
-const archivoNarrow = Archivo_Narrow({ subsets: ["latin"], variable: "--font-archivo-narrow" });
-const sairaCondensed = Saira_Condensed({
+const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
+const archivoBlack = Archivo_Black({
   subsets: ["latin"],
-  weight: ["600", "700", "800", "900"],
-  variable: "--font-saira-condensed",
+  weight: "400",
+  variable: "--font-archivo-black",
+});
+const abrilFatface = Abril_Fatface({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-abril-fatface",
 });
 const fjallaOne = Fjalla_One({ subsets: ["latin"], weight: "400", variable: "--font-fjalla-one" });
-const teko = Teko({ subsets: ["latin"], variable: "--font-teko" });
 
-const CORPO = [dmSans, inter, manrope, figtree, workSans, sourceSans, rubik, karla];
+const CORPO = [dmSans, poppins, inter, lora, fraunces, nunito, spaceGrotesk, robotoSlab];
 
 const TITULO = [
   barlowCondensed,
   oswald,
   bebasNeue,
   anton,
-  archivoNarrow,
-  sairaCondensed,
+  playfair,
+  archivoBlack,
+  abrilFatface,
   fjallaOne,
-  teko,
 ];
 
 /**
