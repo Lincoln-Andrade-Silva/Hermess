@@ -117,7 +117,8 @@ A nota exibida no card é da loja, não do produto, o que infla todos para 4.9. 
 - [x] **Fase 8**: Estoque - listagem paginada por variação (filtros de categoria e estoque baixo), entrada e ajuste com motivo, histórico de movimentações (venda/devolução automáticas + entrada/ajuste manuais) e alerta de estoque baixo configurável
 - [x] **Fase 9**: Dashboard - KPIs (faturamento, vendas, ticket, margem) com variação vs. período anterior, KPIs operacionais (itens, aguardando, estoque baixo), gráfico de faturamento por dia com eixos, quebra por método/canal, pedidos por status e ranking; filtro por presets (7/30/90) ou intervalo de datas personalizado
 - [x] **Fase 10**: Relatórios - faturamento (com custo e margem), produtos com margem e margem %, métodos de pagamento (online vs. cada método do balcão), movimentações e valor de estoque por categoria; período por presets ou intervalo personalizado
-- [~] **Fase 11**: Configurações - identidade da loja, credenciais/taxa do Mercado Pago e **gestão de usuários** (listagem paginada, filtros, edição e criação manual) feitas; falta a janela de retirada
+- [~] **Fase 11**: Configurações - identidade da loja e credenciais/taxa do Mercado Pago em abas (Estabelecimento | Pagamentos), **gestão de usuários** (listagem paginada, filtros, edição e criação manual) feitas; falta a janela de retirada
+- [x] **Fase 11.1**: Aparência - tema (claro/escuro/personalizado com 5 cores) e tipografia (fonte de corpo + de títulos) configuráveis **por escopo** (vitrine/login e painel). Tokens do Tailwind viram CSS vars alimentadas por `tema_config` (uma linha por escopo, RLS deny), injetadas no servidor por cada layout - sem flash. Tela com preview de vitrine e de painel, painel mudando ao vivo antes de salvar, color picker próprio (HSV, sem o nativo do SO) e estados de feedback tokenizados para o tema escuro. "Aparência" antiga (banners) virou "Banner inicial"
 
 **Entrega**
 - [x] **Fase 12**: Deploy (Vercel + Supabase)
