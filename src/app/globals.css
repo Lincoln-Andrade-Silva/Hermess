@@ -2,8 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Tema claro como default do documento. Cada escopo (vitrine, login e painel)
+ * sobrescreve estas vars no seu layout com a paleta configurada; o que fica aqui
+ * é o que vale antes disso - páginas de erro, not-found e qualquer rota fora dos
+ * três grupos. Os valores espelham `PALETA_CLARA` em `src/lib/tema.ts`.
+ */
 :root {
   color-scheme: light;
+
+  --c-bg: 255 255 255;
+  --c-panel: 255 255 255;
+  --c-surface: 247 247 247;
+  --c-surface2: 239 239 239;
+  --c-line: 229 229 229;
+  --c-line2: 212 212 212;
+  --c-ink: 10 10 10;
+  --c-muted: 82 82 82;
+  --c-muted2: 115 115 115;
+  --c-brand: 23 23 23;
+  --c-brand-fg: 255 255 255;
+  --c-brand-light: 64 64 64;
+  --c-brand-dark: 0 0 0;
+
+  --font-sans: var(--font-dm-sans);
+  --font-display: var(--font-barlow-condensed);
 }
 
 html {

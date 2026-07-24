@@ -67,7 +67,7 @@ export async function salvarPagamentoConfig(input: PagamentoConfigInput): Promis
     await db.insert(pagamentoConfig).values(dados);
   }
 
-  revalidatePath("/admin/pagamento");
+  revalidatePath("/admin/configuracoes");
   revalidatePath("/admin/produtos");
   return { ok: true };
 }

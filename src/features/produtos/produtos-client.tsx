@@ -241,7 +241,7 @@ export function ProdutosClient({
         actions={
           <Link
             href="/admin/produtos/novo"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-3 text-sm font-bold text-white shadow-brand transition hover:-translate-y-px hover:bg-brand-dark hover:shadow-brand-lg sm:w-auto"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-3 text-sm font-bold text-brand-fg shadow-brand transition hover:-translate-y-px hover:bg-brand-dark hover:shadow-brand-lg sm:w-auto"
           >
             <Plus className="h-4 w-4" />
             Novo produto

@@ -3,8 +3,8 @@ import Image from "next/image";
 import { cn } from "@/lib/cn";
 import { getLojaBrand } from "@/lib/loja";
 import { listarCategoriasComProduto, listarVitrine } from "@/features/vitrine/queries";
-import { listarBannersAtivos } from "@/features/aparencia/queries";
-import { BannerHero } from "@/features/aparencia/banner-hero";
+import { listarBannersAtivos } from "@/features/banner/queries";
+import { BannerHero } from "@/features/banner/banner-hero";
 import { ProdutoCard } from "@/features/vitrine/produto-card";
 
 export const dynamic = "force-dynamic";

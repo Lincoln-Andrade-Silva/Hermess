@@ -1,10 +1,10 @@
 import {
   BarChart3,
   Boxes,
-  CreditCard,
   Gauge,
   Image,
   Package,
+  Palette,
   Receipt,
   Settings,
   ShoppingCart,
@@ -53,9 +53,10 @@ export const ADMIN_NAV: AdminNavSection[] = [
   {
     label: "Sistema",
     items: [
-      { label: "Aparência", href: "/admin/aparencia", icon: Image, ready: true },
-      { label: "Pagamento", href: "/admin/pagamento", icon: CreditCard, ready: true },
+      { label: "Banner inicial", href: "/admin/banner", icon: Image, ready: true },
+      { label: "Aparência", href: "/admin/aparencia", icon: Palette, ready: true },
       { label: "Usuários", href: "/admin/usuarios", icon: Users, ready: true },
+      // Pagamento não é item de menu: virou aba de Configurações.
       { label: "Configurações", href: "/admin/configuracoes", icon: Settings, ready: true },
     ],
   },

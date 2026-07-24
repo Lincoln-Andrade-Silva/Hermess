@@ -19,7 +19,7 @@ export function Segmented<T extends string>({ options, value, onChange }: Segmen
           className={cn(
             "inline-flex h-11 items-center justify-center rounded-lg px-4 text-sm font-bold transition",
             value === option.value
-              ? "bg-brand text-white shadow-brand"
+              ? "bg-brand text-brand-fg shadow-brand"
               : "border border-line bg-surface text-muted hover:bg-surface2 hover:text-ink",
           )}
         >

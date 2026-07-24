@@ -53,7 +53,7 @@ export async function salvarBanner(id: string | null, input: BannerInput): Promi
     await db.insert(banners).values({ ...dados, ordem: total });
   }
 
-  revalidatePath("/admin/aparencia");
+  revalidatePath("/admin/banner");
   revalidatePath("/");
   return { ok: true };
 }
@@ -69,7 +69,7 @@ export async function excluirBanner(id: string): Promise<ResultadoAcao> {
     if (banner.imagemMobileUrl) await removerImagem(banner.imagemMobileUrl);
   }
 
-  revalidatePath("/admin/aparencia");
+  revalidatePath("/admin/banner");
   revalidatePath("/");
   return { ok: true };
 }
@@ -82,7 +82,7 @@ export async function reordenarBanners(ids: string[]): Promise<ResultadoAcao> {
       await tx.update(banners).set({ ordem }).where(eq(banners.id, id));
     }
   });
-  revalidatePath("/admin/aparencia");
+  revalidatePath("/admin/banner");
   revalidatePath("/");
   return { ok: true };
 }

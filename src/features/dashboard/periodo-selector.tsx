@@ -45,7 +45,9 @@ export function PeriodoSelector() {
     );
 
   const dataInput = cn(
-    "h-9 rounded-lg border bg-surface px-2.5 text-sm text-ink outline-none transition [color-scheme:light] focus:border-brand",
+    // Sem `color-scheme` fixo: o calendário nativo segue o do escopo, definido
+    // no `:root` pelo tema em uso.
+    "h-9 rounded-lg border bg-surface px-2.5 text-sm text-ink outline-none transition focus:border-brand",
     personalizado ? "border-ink" : "border-line",
   );
 

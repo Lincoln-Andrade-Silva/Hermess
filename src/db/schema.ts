@@ -343,3 +343,38 @@ export const pagamentoConfig = pgTable("pagamento_config", {
 
 export type PagamentoConfig = typeof pagamentoConfig.$inferSelect;
 export type NovaPagamentoConfig = typeof pagamentoConfig.$inferInsert;
+
+/** Vitrine (loja + login) e painel têm tema e tipografia próprios. */
+export const escopoTema = pgEnum("escopo_tema", ["vitrine", "admin"]);
+export const modoTema = pgEnum("modo_tema", ["claro", "escuro", "personalizado"]);
+
+/**
+ * Tema e fontes de cada escopo - uma linha por escopo. As cores só são lidas no
+ * modo personalizado; nos modos claro e escuro os valores vêm do preset, e as
+ * cores salvas ficam guardadas para quando o lojista voltar ao personalizado.
+ * Ausência de linha cai no claro com a tipografia padrão do template.
+ */
+export const temaConfig = pgTable(
+  "tema_config",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    escopo: escopoTema("escopo").notNull(),
+    tema: modoTema("tema").notNull().default("claro"),
+    // Cinco cores de base; os demais tokens (surface2, line2, muted...) são
+    // derivados delas para o lojista não ter que preencher doze campos.
+    corBg: text("cor_bg"),
+    corSurface: text("cor_surface"),
+    corInk: text("cor_ink"),
+    corLine: text("cor_line"),
+    corBrand: text("cor_brand"),
+    fonteCorpo: text("fonte_corpo").notNull().default("dm-sans"),
+    fonteTitulo: text("fonte_titulo").notNull().default("barlow-condensed"),
+    atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    escopoUnico: unique("tema_config_escopo_unq").on(t.escopo),
+  }),
+);
+
+export type TemaConfig = typeof temaConfig.$inferSelect;
+export type NovaTemaConfig = typeof temaConfig.$inferInsert;
