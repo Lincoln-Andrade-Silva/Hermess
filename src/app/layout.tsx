@@ -1,17 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow_Condensed, DM_Sans } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { CLASSES_DE_FONTE } from "@/lib/fontes-google";
 import { getLojaBrand } from "@/lib/loja";
 import "./globals.css";
-
-// Display condensada para títulos/marca; DM Sans para corpo, preço e formulários.
-const display = Barlow_Condensed({
-  subsets: ["latin"],
-  weight: ["600", "700", "800", "900"],
-  variable: "--font-display",
-});
-
-const sans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
 
 export async function generateMetadata(): Promise<Metadata> {
   const { nome } = await getLojaBrand();
@@ -21,8 +12,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+// `themeColor` sai daqui: cada escopo define o seu a partir do tema em uso.
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
   // Evita o zoom automático ao focar inputs no mobile.
@@ -31,7 +22,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${display.variable} ${sans.variable}`}>
+    // Todas as fontes do catálogo entram como variável; cada escopo aponta
+    // `--font-sans` / `--font-display` para a que foi configurada.
+    <html lang="pt-BR" className={CLASSES_DE_FONTE}>
       <body>
         {children}
         <SpeedInsights />

@@ -8,7 +8,7 @@ import { Badge, Button, ConfirmModal, PageHeader } from "@/components/ui";
 import { BannerModal } from "./banner-modal";
 import { excluirBanner, reordenarBanners } from "./actions";
 
-export function AparenciaClient({ banners }: { banners: Banner[] }) {
+export function BannersClient({ banners }: { banners: Banner[] }) {
   const router = useRouter();
   const [processando, iniciar] = useTransition();
   const [editando, setEditando] = useState<Banner | null>(null);
@@ -38,7 +38,7 @@ export function AparenciaClient({ banners }: { banners: Banner[] }) {
   return (
     <>
       <PageHeader
-        title="Aparência"
+        title="Banner inicial"
         description="Banners da home. Um só aparece estático; vários viram carrossel na ordem abaixo."
         action={
           <Button onClick={() => setCriando(true)} className="w-full sm:w-auto">

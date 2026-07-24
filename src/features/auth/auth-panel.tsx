@@ -61,7 +61,7 @@ export function AuthPanel({
             onClick={() => setTab(value)}
             className={cn(
               "rounded-lg py-2.5 text-[13px] font-semibold transition",
-              tab === value ? "bg-brand text-white shadow-brand" : "text-muted hover:text-ink",
+              tab === value ? "bg-brand text-brand-fg shadow-brand" : "text-muted hover:text-ink",
             )}
           >
             {value === "login" ? "Entrar" : "Cadastrar"}

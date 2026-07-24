@@ -30,7 +30,7 @@ function Avatar({ url, nome }: { url?: string | null; nome: string }) {
     );
   }
   return (
-    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-white">
+    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-brand-fg">
       {nome.charAt(0).toUpperCase()}
     </span>
   );

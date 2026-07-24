@@ -1,9 +1,6 @@
-import { obterPagamentoConfig } from "@/features/pagamento/actions";
-import { PagamentoForm } from "@/features/pagamento/pagamento-form";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default async function PagamentoPage() {
-  const config = await obterPagamentoConfig();
-  return <PagamentoForm config={config} />;
+/** Pagamento virou aba de Configurações; a rota antiga segue valendo em favoritos. */
+export default function PagamentoPage() {
+  redirect("/admin/configuracoes?tab=pagamentos");
 }

@@ -9,24 +9,27 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Tokens semânticos: trocar a paleta aqui reveste o sistema inteiro,
-        // sem tocar em componente. Base clara e quase acromática - em loja de
-        // roupa quem dá a cor é a foto do produto, não a interface.
-        bg: "#ffffff",
-        panel: "#ffffff",
-        surface: "#f7f7f7",
-        surface2: "#efefef",
-        line: "#e5e5e5",
-        line2: "#d4d4d4",
-        ink: "#0a0a0a",
-        // Contrastes sobre #fff: muted 8.1:1, muted2 4.7:1 - ambos passam AA
-        // em texto pequeno, que é onde eles são usados (labels, placeholders).
-        muted: "#525252",
-        muted2: "#737373",
+        // Tokens semânticos ligados a CSS vars: cada escopo (vitrine e painel)
+        // injeta a sua paleta no `:root` e o sistema inteiro se reveste, sem
+        // tocar em componente. Os valores vêm de `src/lib/tema.ts`; o default
+        // do tema claro fica em `globals.css`. O formato `rgb(... / <alpha>)`
+        // é o que mantém utilitários com opacidade (`bg-surface/40`) válidos.
+        bg: "rgb(var(--c-bg) / <alpha-value>)",
+        panel: "rgb(var(--c-panel) / <alpha-value>)",
+        surface: "rgb(var(--c-surface) / <alpha-value>)",
+        surface2: "rgb(var(--c-surface2) / <alpha-value>)",
+        line: "rgb(var(--c-line) / <alpha-value>)",
+        line2: "rgb(var(--c-line2) / <alpha-value>)",
+        ink: "rgb(var(--c-ink) / <alpha-value>)",
+        muted: "rgb(var(--c-muted) / <alpha-value>)",
+        muted2: "rgb(var(--c-muted2) / <alpha-value>)",
         brand: {
-          DEFAULT: "#171717",
-          light: "#404040",
-          dark: "#000000",
+          DEFAULT: "rgb(var(--c-brand) / <alpha-value>)",
+          // Texto sobre o brand. Preto ou branco conforme a luminância da cor,
+          // porque no tema escuro o botão primário é claro com texto escuro.
+          fg: "rgb(var(--c-brand-fg) / <alpha-value>)",
+          light: "rgb(var(--c-brand-light) / <alpha-value>)",
+          dark: "rgb(var(--c-brand-dark) / <alpha-value>)",
         },
       },
       boxShadow: {
