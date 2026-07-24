@@ -1,6 +1,12 @@
 import type { Viewport } from "next";
 import { FONTES_CORPO, FONTES_TITULO, variavelDaFonte } from "@/lib/fontes";
-import { declaracoesDeCor, esquemaDeCor, paletaDoTema, type EscopoTema } from "@/lib/tema";
+import {
+  declaracoesDeCor,
+  declaracoesDeFeedback,
+  esquemaDeCor,
+  paletaDoTema,
+  type EscopoTema,
+} from "@/lib/tema";
 import { obterTemaConfig } from "@/features/tema/queries";
 
 /**
@@ -17,13 +23,15 @@ export async function TemaEscopo({ escopo }: { escopo: EscopoTema }) {
   const config = await obterTemaConfig(escopo);
   const paleta = paletaDoTema(config);
 
+  const esquema = esquemaDeCor(paleta);
   const fonteCorpo = variavelDaFonte(config?.fonteCorpo ?? "", FONTES_CORPO);
   const fonteTitulo = variavelDaFonte(config?.fonteTitulo ?? "", FONTES_TITULO);
 
   const css = [
     ":root{",
-    `color-scheme:${esquemaDeCor(paleta)};`,
+    `color-scheme:${esquema};`,
     `${declaracoesDeCor(paleta)};`,
+    `${declaracoesDeFeedback(esquema)};`,
     `--font-sans:var(${fonteCorpo});`,
     `--font-display:var(${fonteTitulo});`,
     "}",

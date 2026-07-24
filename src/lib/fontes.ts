@@ -3,6 +3,10 @@
  * `next/font`, para poder ser importado também pelo client da tela - o
  * carregamento em si fica em `fontes-google.ts`, que só o layout usa.
  *
+ * As listas privilegiam variedade visível: entre uma opção e outra a mudança
+ * precisa saltar aos olhos. Por isso misturam categorias (neutra, geométrica,
+ * serifada, arredondada, condensada), em vez de vários neutros parecidos.
+ *
  * Acrescentar uma fonte aqui exige declarar o loader correspondente lá; as duas
  * listas são conferidas em tempo de build por `fontes-google.ts`.
  */
@@ -15,25 +19,25 @@ export interface OpcaoFonte {
 /** Corpo, preço, formulário: precisa aguentar texto pequeno e denso. */
 export const FONTES_CORPO: readonly OpcaoFonte[] = [
   { chave: "dm-sans", nome: "DM Sans", variavel: "--font-dm-sans" },
+  { chave: "poppins", nome: "Poppins", variavel: "--font-poppins" },
   { chave: "inter", nome: "Inter", variavel: "--font-inter" },
-  { chave: "manrope", nome: "Manrope", variavel: "--font-manrope" },
-  { chave: "figtree", nome: "Figtree", variavel: "--font-figtree" },
-  { chave: "work-sans", nome: "Work Sans", variavel: "--font-work-sans" },
-  { chave: "source-sans", nome: "Source Sans 3", variavel: "--font-source-sans" },
-  { chave: "rubik", nome: "Rubik", variavel: "--font-rubik" },
-  { chave: "karla", nome: "Karla", variavel: "--font-karla" },
+  { chave: "lora", nome: "Lora", variavel: "--font-lora" },
+  { chave: "fraunces", nome: "Fraunces", variavel: "--font-fraunces" },
+  { chave: "nunito", nome: "Nunito", variavel: "--font-nunito" },
+  { chave: "space-grotesk", nome: "Space Grotesk", variavel: "--font-space-grotesk" },
+  { chave: "roboto-slab", nome: "Roboto Slab", variavel: "--font-roboto-slab" },
 ];
 
-/** Títulos, marca e nome de produto: condensadas e de peso alto. */
+/** Títulos, marca e nome de produto: peso alto e presença. */
 export const FONTES_TITULO: readonly OpcaoFonte[] = [
   { chave: "barlow-condensed", nome: "Barlow Condensed", variavel: "--font-barlow-condensed" },
   { chave: "oswald", nome: "Oswald", variavel: "--font-oswald" },
   { chave: "bebas-neue", nome: "Bebas Neue", variavel: "--font-bebas-neue" },
   { chave: "anton", nome: "Anton", variavel: "--font-anton" },
-  { chave: "archivo-narrow", nome: "Archivo Narrow", variavel: "--font-archivo-narrow" },
-  { chave: "saira-condensed", nome: "Saira Condensed", variavel: "--font-saira-condensed" },
+  { chave: "playfair", nome: "Playfair Display", variavel: "--font-playfair" },
+  { chave: "archivo-black", nome: "Archivo Black", variavel: "--font-archivo-black" },
+  { chave: "abril-fatface", nome: "Abril Fatface", variavel: "--font-abril-fatface" },
   { chave: "fjalla-one", nome: "Fjalla One", variavel: "--font-fjalla-one" },
-  { chave: "teko", nome: "Teko", variavel: "--font-teko" },
 ];
 
 /**
